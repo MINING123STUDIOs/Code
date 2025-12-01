@@ -23,6 +23,7 @@ Num_Damp = 1
 #---
 R = 1e4
 C = 10e-6
+#current example: RC filter with white noise.
 
 #calculating secondary params
 burnsteps =  -int(- Burntime / DeltaTime) #number of required timesteps to burn
@@ -48,7 +49,7 @@ def clock(type, hi, lo, t, f, duty, phase):
     if type == "square":
         return hi if ( ( f * t + phase ) % 1 ) > duty else lo
     if type == "sine":
-        return linint( hi, lo, 0.5 + 0.5 * np.sin( np.pi( f * t + phase ) ) )
+        return linint( hi, lo, 0.5 + 0.5 * np.sin( np.pi * ( f * t + phase ) % np.pi ) )
     if type == "triangle":
         return linint( hi, lo,  )
     if type == "saw":
@@ -104,7 +105,7 @@ print("Done.")
 print("0/1 Complete.")
 
 for x1 in range( steps + burnsteps ):
-    N_Time = Time + DeltaTime #keeping time
+    Time += DeltaTime #keeping time
     #--- stuff VVV
     State = Euler_step(Time, State)
     if x1 > burnsteps: #recording data
