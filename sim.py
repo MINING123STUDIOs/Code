@@ -20,6 +20,7 @@ Timeframe = 0.2 #s
 Burntime = 0 #s
 DeltaTime = 1e-5 #s
 Num_Damp = 1
+Solver = "implicit_Euler"
 #---
 R = 1e3
 C = 1e-7
@@ -37,6 +38,31 @@ Rec = np.zeros( steps - 1 )
 #---
 Time = 0
 State = np.array([ 0, 0 ]) # (U, Rec)
+
+def newton_solve(F, x0, tol=1e-9, max_iter=20):
+    x = x0.astype(float).copy()
+    n = len(x)
+
+    for _ in range(max_iter):
+        Fx = F(x)
+        if np.linalg.norm(Fx, ord=2) < tol:
+            return x
+
+        J = np.zeros((n, n), dtype=float)
+        eps = 1e-8
+
+        for i in range(n):
+            x_pert = x.copy()
+            x_pert[i] += eps
+            J[:, i] = (F(x_pert) - Fx) / eps
+
+        delta = np.linalg.solve(J, -Fx)
+        x += delta
+
+        if np.linalg.norm(delta, ord=2) < tol:
+            return x
+
+    return x
 
 def linint(hi, lo, s):
     s = np.clip(s, a_max = 1, a_min = 0)
@@ -78,9 +104,10 @@ def f(t, x):
     return np.array([U, rec])
 
 def Euler_step(t, State):
-    def F(xn):
-        return xn - State - DeltaTime * f(t, xn)
-    return sci.optimize.fsolve(F, State)
+    if Solver == "implicit_Euler" or Solver == "iE":
+        def F(xn):
+            return xn - State - DeltaTime * f(t, xn)
+        return newton_solve(F, State)#sci.optimize.fsolve(F, State)
 
 for i in range(1): #ask
     INP = "Y"
