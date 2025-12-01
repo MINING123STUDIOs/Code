@@ -21,8 +21,8 @@ Burntime = 0 #s
 DeltaTime = 1e-5 #s
 Num_Damp = 1
 #---
-R = 1e4
-C = 10e-6
+R = 1e3
+C = 1e-7
 #current example: RC filter with white noise.
 
 #calculating secondary params
@@ -46,15 +46,15 @@ def thermrad(A, emiss, T, T_amb):
     return A * emiss * sigma * ( ( T + 273.15 ) ** 4 - ( T_amb + 273.15 ) ** 4 )
 
 def clock(type, hi, lo, t, f, duty, phase):
-    if type == "square":
+    if type == "square" or type == "sq":
         return hi if ( ( f * t + phase ) % 1 ) > duty else lo
-    if type == "sine":
-        return linint( hi, lo, 0.5 + 0.5 * np.sin( np.pi * ( f * t + phase ) % np.pi ) )
-    if type == "triangle":
-        return linint( hi, lo,  )
-    if type == "saw":
+    if type == "sine" or type == "sn":
+        return linint( hi, lo, 0.5 + 0.5 * np.sin( np.pi * ( f * t + phase ) ) )
+    if type == "triangle" or type == "tg":
+        return linint( hi, lo, 2 * np.abs( ( f * t + phase ) % 1 - 0.5 ) )
+    if type == "saw" or type == "sw":
         return linint( hi, lo, ( f * t + phase ) % 1 )
-    if type == "white_noise":
+    if type == "white_noise" or type == "wn":
         return linint( hi, lo, rng.random() )
     if type == "0":
         return linint( hi, lo, 0 )
@@ -72,9 +72,9 @@ def safeexp(x):
 
 def f(t, x):
     U = x[0]
-    U_A = clock("white_noise", 1, 0, t, 0, 0, 0)
+    U_A = clock("sn", 1, -1, t, 20, 0, 0)
     U = ( U_A - U ) / ( R * C )
-    rec = U
+    rec = U_A
     return np.array([U, rec])
 
 def Euler_step(t, State):
