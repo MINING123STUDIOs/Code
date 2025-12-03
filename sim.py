@@ -5,6 +5,7 @@ def lb():
 lb()
 # TODO: -/-
 #importing standart libs.
+#from numba import njit
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sci
@@ -14,13 +15,14 @@ import sys
 
 #setting constants 
 sigma = 5.670374419e-8 #W/m^2*K^4
+pi = np.pi
 
 #sim params
 Timeframe = 0.2 #s
 Burntime = 0 #s
-DeltaTime = 1e-5 #s
+DeltaTime = 1e-4 #s
 Num_Damp = 1
-Solver = "implicit_Euler"
+ODEsolver = "iE"
 #---
 R = 1e3
 C = 1e-7
@@ -34,10 +36,11 @@ steps = -int(-( Timeframe )/DeltaTime) #number of required timesteps
 
 #working variables
 TIME = np.arange(Burntime, Burntime + Timeframe, DeltaTime)
-Rec = np.zeros( steps - 1 )
+Rec = np.zeros( steps )
 #---
 Time = 0
-State = np.array([ 0, 0 ]) # (U, Rec)
+dState = np.array( [ 0 ], dtype = np.float64 ) # (U_c)
+State = np.array( [ 0, 0 ], dtype = np.float64 ) # (U_A, Rec)
 
 def newton_solve(F, x0, tol=1e-9, max_iter=20):
     x = x0.astype(float).copy()
@@ -64,18 +67,23 @@ def newton_solve(F, x0, tol=1e-9, max_iter=20):
 
     return x
 
+#@njit
 def linint(hi, lo, s):
-    s = np.clip(s, a_max = 1, a_min = 0)
+    if s < 0.0:
+        s = 0.0
+    elif s > 1.0:
+        s = 1.0
     return hi * s + lo * ( 1 - s )
 
 def thermrad(A, emiss, T, T_amb):
     return A * emiss * sigma * ( ( T + 273.15 ) ** 4 - ( T_amb + 273.15 ) ** 4 )
 
+#@njit
 def clock(type, hi, lo, t, f, duty, phase):
     if type == "square" or type == "sq":
         return hi if ( ( f * t + phase ) % 1 ) > duty else lo
     if type == "sine" or type == "sn":
-        return linint( hi, lo, 0.5 + 0.5 * np.sin( np.pi * ( f * t + phase ) ) )
+        return linint( hi, lo, 0.5 + 0.5 * np.sin( 2 * pi * ( f * t + phase ) ) )
     if type == "triangle" or type == "tg":
         return linint( hi, lo, 2 * np.abs( ( f * t + phase ) % 1 - 0.5 ) )
     if type == "saw" or type == "sw":
@@ -96,26 +104,36 @@ def progress(percent):
 def safeexp(x):
      return np.exp(np.clip(x, a_max=700, a_min=-5e18))
 
-def f(t, x):
+#@njit
+def df(t, x, s):
     U = x[0]
-    U_A = clock("sn", 1, -1, t, 20, 0, 0)
-    U = ( U_A - U ) / ( R * C )
-    rec = U_A
-    return np.array([U, rec])
+    U_A = s[1]
+    dU = ( U_A - U ) / ( R * C )
+    return np.array( [ dU ], dtype = np.float64 )
 
-def Euler_step(t, State):
-    if Solver == "implicit_Euler" or Solver == "iE":
+def f(t, d, s):
+    U_A = clock("wn", 1, -1, t, 20, 0, 0)
+    Rec = U_A
+    return np.array( [ Rec, U_A ], dtype = np.float64 ) # (U_A, Rec)
+
+def step(t, dState, State):
+    if ODEsolver == "implicit_Euler" or ODEsolver == "iE":
         def F(xn):
-            return xn - State - DeltaTime * f(t, xn)
-        return newton_solve(F, State)#sci.optimize.fsolve(F, State)
+            return xn - dState - DeltaTime * df(t, xn, State)
+        return newton_solve(F, dState)#sci.optimize.fsolve(F, State)
+    if ODEsolver == "explicit_Euler" or ODEsolver == "eE":
+        return State + DeltaTime * df(t, dState, State)
 
 for i in range(1): #ask
     INP = "Y"
     y = True
     while y == True:
         INP = input(f"Confirm simulating {steps + burnsteps} samples? [Y]/[N]/[i]")
-        if INP == "Y" or INP == "N" or INP == "i":
+        if INP == "Y" or INP == "N":
             y = False
+            break
+        if INP == "i":
+            print(f"simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds),")
         else:
             print("Wrong input, please try again.")
 
@@ -123,10 +141,8 @@ for i in range(1): #ask
         pass
     if INP == "N":
         exit()
-    if INP == "i":
-        print(f"simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds),")
 
-State = Euler_step(Time, State)
+State = step(Time, dState, State)
 
 print("Done.")
 print("0/1 Complete.")
@@ -134,12 +150,13 @@ print("0/1 Complete.")
 for x1 in range( steps + burnsteps ):
     Time += DeltaTime #keeping time
     #--- stuff VVV
-    State = Euler_step(Time, State)
-    if x1 > burnsteps: #recording data
-        Rec[x1 - burnsteps - 1] = State[ 1 ]
+    State = f(Time, dState, State)
+    dState = step(Time, dState, State)
+    if x1 >= burnsteps: #recording data
+        Rec[x1 - burnsteps ] = dState[0]
     progress(100 * x1 / ( steps + burnsteps))
 lb()
-print("1/2 Complete.")
+print("1/1 Complete.")
 
 # post processing
 
@@ -149,13 +166,13 @@ print("1/2 Complete.")
 
 t = TIME
 s = np.nan_to_num(Rec)
-
-if len(s) > len(t):
-    t = np.append(t, t[-1] + DeltaTime)
+for ___ in range(3):
+    if len(s) > len(t):
+        t = np.append(t, t[-1] + DeltaTime)
     
-if len(t) > len(s):
-    s = np.append(s, s[-1])
-     
+    if len(t) > len(s):
+        s = np.append(s, s[-1])
+
 if len(s) != len(t):
      lb()
      print("\nData Error!")
