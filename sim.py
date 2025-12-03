@@ -5,7 +5,6 @@ def lb():
 lb()
 # TODO: -/-
 #importing standart libs.
-#from numba import njit
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sci
@@ -22,7 +21,8 @@ Timeframe = 0.2 #s
 Burntime = 0 #s
 DeltaTime = 1e-4 #s
 Num_Damp = 1
-ODEsolver = "iE"
+ODEsolver = "eE" # iE / implicit_Euler / eE / explicit_Euler
+EQsolver = "custom_Newton" #custom_Newton / cN / fSolve / fS
 #---
 R = 1e3
 C = 1e-7
@@ -41,6 +41,28 @@ Rec = np.zeros( steps )
 Time = 0
 dState = np.array( [ 0 ], dtype = np.float64 ) # (U_c)
 State = np.array( [ 0, 0 ], dtype = np.float64 ) # (U_A, Rec)
+
+def UI():
+    INP = "Y"
+    y = True
+    while y == True:
+        INP = input(f"Confirm simulating {steps + burnsteps} samples? [Y]/[N]/[i]")
+        if INP == "Y" or INP == "N":
+            y = False
+            break
+        if INP == "i":
+            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("_", " ")
+            intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
+            print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
+            #lb()
+            print(f"Using {intvar0001} with {intvar0002}.")
+        else:
+            print("Wrong input, please try again.")
+
+    if INP == "Y":
+        pass
+    if INP == "N":
+        exit()
 
 def newton_solve(F, x0, tol=1e-9, max_iter=20):
     x = x0.astype(float).copy()
@@ -67,7 +89,6 @@ def newton_solve(F, x0, tol=1e-9, max_iter=20):
 
     return x
 
-#@njit
 def linint(hi, lo, s):
     if s < 0.0:
         s = 0.0
@@ -78,8 +99,7 @@ def linint(hi, lo, s):
 def thermrad(A, emiss, T, T_amb):
     return A * emiss * sigma * ( ( T + 273.15 ) ** 4 - ( T_amb + 273.15 ) ** 4 )
 
-#@njit
-def clock(type, hi, lo, t, f, duty, phase):
+def clock(t, type, hi=1, lo=-1, f=1, duty=0.5, phase=0):
     if type == "square" or type == "sq":
         return hi if ( ( f * t + phase ) % 1 ) > duty else lo
     if type == "sine" or type == "sn":
@@ -104,7 +124,6 @@ def progress(percent):
 def safeexp(x):
      return np.exp(np.clip(x, a_max=700, a_min=-5e18))
 
-#@njit
 def df(t, x, s):
     U = x[0]
     U_A = s[1]
@@ -112,7 +131,7 @@ def df(t, x, s):
     return np.array( [ dU ], dtype = np.float64 )
 
 def f(t, d, s):
-    U_A = clock("wn", 1, -1, t, 20, 0, 0)
+    U_A = clock(t, "wn")
     Rec = U_A
     return np.array( [ Rec, U_A ], dtype = np.float64 ) # (U_A, Rec)
 
@@ -120,31 +139,18 @@ def step(t, dState, State):
     if ODEsolver == "implicit_Euler" or ODEsolver == "iE":
         def F(xn):
             return xn - dState - DeltaTime * df(t, xn, State)
-        return newton_solve(F, dState)#sci.optimize.fsolve(F, State)
+        if EQsolver == "custom_Newton" or EQsolver == "cN":
+            return newton_solve(F, dState)
+        if EQsolver == "fSolve" or EQsolver == "fS":
+            return sci.optimize.fsolve(F, State)
     if ODEsolver == "explicit_Euler" or ODEsolver == "eE":
         return State + DeltaTime * df(t, dState, State)
 
-for i in range(1): #ask
-    INP = "Y"
-    y = True
-    while y == True:
-        INP = input(f"Confirm simulating {steps + burnsteps} samples? [Y]/[N]/[i]")
-        if INP == "Y" or INP == "N":
-            y = False
-            break
-        if INP == "i":
-            print(f"simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds),")
-        else:
-            print("Wrong input, please try again.")
-
-    if INP == "Y":
-        pass
-    if INP == "N":
-        exit()
-
-State = step(Time, dState, State)
+dState = step(Time, dState, State)
+State = f(Time, dState, State)
 
 print("Done.")
+UI()
 print("0/1 Complete.")
 
 for x1 in range( steps + burnsteps ):
@@ -157,7 +163,7 @@ for x1 in range( steps + burnsteps ):
     progress(100 * x1 / ( steps + burnsteps))
 lb()
 print("1/1 Complete.")
-
+print("Please wait. . .")
 # post processing
 
 
@@ -189,4 +195,5 @@ plt.tick_params(axis="both", which="both")
 ax.grid()
 
 fig.savefig("test.png")
+print("Done.")
 plt.show()
