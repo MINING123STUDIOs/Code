@@ -21,14 +21,16 @@ Timeframe = 0.2 #s
 Burntime = 0 #s
 DeltaTime = 1e-4 #s
 Num_Damp = 1
-ODEsolver = "eE" # iE / implicit_Euler / eE / explicit_Euler
-EQsolver = "custom_Newton" #custom_Newton / cN / fSolve / fS
+ODEsolver = "RK4" # iE / implicit_Euler / eE / explicit_Euler
+EQsolver = "custom_Newton" #custom_Newton / cN / fSolve / fS / Runge_Kutta_4 / RK4
 Save_Data = True
 Save_Format = ".csv" # .csv, .txt, .npz
 Save_Filename = "Recording"
+Enable_console = True
+Confirm_num_len = 4
 #---
-R = 1e3
-C = 1e-7
+R = 1e4
+C = 1e-6
 #current example: RC filter with white noise.
 
 #calculating secondary params
@@ -55,7 +57,7 @@ def UI():
             break
         if INP == "i":
             lb()
-            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("_", " ")
+            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("RK4", "Runge_Kutta_4").replace("_", " ")
             intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
             intvar0003 = "" if Save_Data == True else "not"
             intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
@@ -63,20 +65,20 @@ def UI():
             print(f"Using {intvar0001} with {intvar0002}.")
             print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
             lb()
-        if INP == "console":
-            RNGVAR = f"{rng.randint(1000,9999)}"
+        elif INP == "console" and Enable_console == True:
+            RNGVAR = f"{rng.randint( 10 ** Confirm_num_len / 10, 10 ** Confirm_num_len - 1 )}"
             print("Warning: usage of this function may break the softwear! Usage may also pose a security risk due to the execution of bad code!")
             cinp = input(f"To confirm entering the console please enter the following number: {RNGVAR} \n")
             if cinp == RNGVAR:
                 print("Console:")
                 lb()
-                while cinp != "exit_console":
-                    cinp = input(">>>")
-                    cinp = cinp.strip().replace("UI()", "print(\"This function is not available.\")") #
-                    if cinp == "exit_console":
+                while cinp != "exit":
+                    cinp = input(">>>").strip().replace("UI()", "print(\"This function is not available.\")") #
+                    if cinp == "exit":
                         pass
                     else:
                         exec(cinp, globals())
+                        lb()
             else:
                 print("Incorrect numer!")
                 pass
@@ -155,20 +157,39 @@ def df(t, x, s):
     return np.array( [ dU ], dtype = np.float64 )
 
 def f(t, d, s):
-    U_A = clock(t, "wn")
+    U_A = clock(t, "wn", 1,-1,20)
     Rec = U_A
     return np.array( [ Rec, U_A ], dtype = np.float64 ) # (U_A, Rec)
 
 def step(t, dState, State):
+    
     if ODEsolver == "implicit_Euler" or ODEsolver == "iE":
         def F(xn):
             return xn - dState - DeltaTime * df(t, xn, State)
         if EQsolver == "custom_Newton" or EQsolver == "cN":
             return newton_solve(F, dState)
         if EQsolver == "fSolve" or EQsolver == "fS":
-            return sci.optimize.fsolve(F, State)
+            return sci.optimize.fsolve(F, dState)
+    
     if ODEsolver == "explicit_Euler" or ODEsolver == "eE":
         return State + DeltaTime * df(t, dState, State)
+    
+    if ODEsolver == "Runge_Kutta_4" or ODEsolver == "RK4":
+        k1 = df(t, dState, State)
+        k2 = df(t + DeltaTime / 2, dState + DeltaTime * k1 / 2, State)
+        k3 = df(t + DeltaTime / 2, dState + DeltaTime * k2 / 2, State)
+        k4 = df(t + DeltaTime, dState + DeltaTime * k3, State)
+        return dState + ( DeltaTime / 6 ) * ( k1 + 2 * k2 + 2 * k3 + k4 )
+    
+    if ODEsolver == "Gauss_Legendre_Runge_Kutta_4" or ODEsolver == "GL4":
+        def F(k):
+            
+            return 
+        if EQsolver == "custom_Newton" or EQsolver == "cN":
+            
+        if EQsolver == "fSolve" or EQsolver == "fS":
+            
+        return dState + DeltaTime / 2 * ( k1 + k2 )
 
 dState = step(Time, dState, State)
 State = f(Time, dState, State)
@@ -184,7 +205,7 @@ for x1 in range( steps + burnsteps ):
     dState = step(Time, dState, State)
     if x1 >= burnsteps: #recording data
         Rec[x1 - burnsteps ] = dState[0]
-    #progress(100 * x1 / ( steps + burnsteps))
+    progress(100 * x1 / ( steps + burnsteps))
 lb()
 print("1/1 Complete.")
 print("Please wait. . .")
