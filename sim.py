@@ -194,18 +194,19 @@ def step(t, dState, State):
         return dState + ( DeltaTime / 6 ) * ( k1 + 2 * k2 + 2 * k3 + k4 )
     
     if ODEsolver == "Gauss_Legendre_Runge_Kutta_4" or ODEsolver == "GL4": #broken
+        G0 = np.concatenate((G0,G0))
         def F(k):
             k1 = k[:dSl]
             k2 = k[dSl:]
             F1 = k1 - df(t + GL4_c1 * DeltaTime, dState + DeltaTime * ( GL4_a11 * k1 + GL4_a12 * k2 ), State)
             F2 = k2 - df(t + GL4_c2 * DeltaTime, dState + DeltaTime * ( GL4_a21 * k1 + GL4_a22 * k2 ), State)
-            return np.concatenate(F1,F2)
+            return np.concatenate((F1,F2))
         if EQsolver == "custom_Newton" or EQsolver == "cN":
             k = newton_solve(F, G0)
         if EQsolver == "fSolve" or EQsolver == "fS":
             k = sci.optimize.fsolve(F, G0)
-            k1 = k[:dSl]
-            k2 = k[dSl:]
+        k1 = k[:dSl]
+        k2 = k[dSl:]
         return dState + DeltaTime / 2 * ( k1 + k2 )
 
 dState = step(Time, dState, State)
