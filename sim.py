@@ -1,6 +1,6 @@
 print("Setting up simulation. . . (advanced simulation model 2025)")
 def lb():
-    print("\n")
+    print("")
 
 lb()
 # TODO: -/-
@@ -23,6 +23,9 @@ DeltaTime = 1e-4 #s
 Num_Damp = 1
 ODEsolver = "eE" # iE / implicit_Euler / eE / explicit_Euler
 EQsolver = "custom_Newton" #custom_Newton / cN / fSolve / fS
+Save_Data = True
+Save_Format = ".csv" # .csv, .txt, .npz
+Save_Filename = "Recording"
 #---
 R = 1e3
 C = 1e-7
@@ -51,10 +54,32 @@ def UI():
             y = False
             break
         if INP == "i":
+            lb()
             intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("_", " ")
             intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
+            intvar0003 = "" if Save_Data == True else "not"
+            intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
             print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
             print(f"Using {intvar0001} with {intvar0002}.")
+            print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
+            lb()
+        if INP == "console":
+            RNGVAR = f"{rng.randint(1000,9999)}"
+            print("Warning: usage of this function may break the softwear! Usage may also pose a security risk due to the execution of bad code!")
+            cinp = input(f"To confirm entering the console please enter the following number: {RNGVAR} \n")
+            if cinp == RNGVAR:
+                print("Console:")
+                lb()
+                while cinp != "exit_console":
+                    cinp = input(">>>")
+                    cinp = cinp.strip().replace("UI()", "print(\"This function is not available.\")") #
+                    if cinp == "exit_console":
+                        pass
+                    else:
+                        exec(cinp, globals())
+            else:
+                print("Incorrect numer!")
+                pass
         else:
             print("Wrong input, please try again.")
 
@@ -159,7 +184,7 @@ for x1 in range( steps + burnsteps ):
     dState = step(Time, dState, State)
     if x1 >= burnsteps: #recording data
         Rec[x1 - burnsteps ] = dState[0]
-    progress(100 * x1 / ( steps + burnsteps))
+    #progress(100 * x1 / ( steps + burnsteps))
 lb()
 print("1/1 Complete.")
 print("Please wait. . .")
@@ -171,6 +196,17 @@ print("Please wait. . .")
 
 t = TIME
 s = np.nan_to_num(Rec)
+
+if Save_Data == True:
+    D = np.array([t,s])
+    if Save_Format == ".npz":
+            np.savez(f"{Save_Filename}.npz", D)
+    if Save_Format == ".txt":
+        np.savetxt(f"{Save_Filename}.txt", D)
+    if Save_Format == ".csv":
+        np.savetxt(f"{Save_Filename}.csv", D, delimiter=",")
+
+
 for ___ in range(3):
     if len(s) > len(t):
         t = np.append(t, t[-1] + DeltaTime)
