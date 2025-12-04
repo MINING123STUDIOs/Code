@@ -15,14 +15,22 @@ import sys
 #setting constants 
 sigma = 5.670374419e-8 #W/m^2*K^4
 pi = np.pi
+###
+GL4_c1 = 0.5 - ( 3 ** 0.5) / 6
+GL4_c2 = 0.5 + ( 3 ** 0.5) / 6
+GL4_a11 = GL4_a22 = 0.25
+GL4_a12 = 0.25 - ( 3 ** 0.5) / 6
+GL4_a21 = 0.25 + ( 3 ** 0.5) / 6
+GL4_b1 = GL4_b2 = 0.5
+###
 
 #sim params
 Timeframe = 0.2 #s
 Burntime = 0 #s
 DeltaTime = 1e-4 #s
 Num_Damp = 1
-ODEsolver = "RK4" # iE / implicit_Euler / eE / explicit_Euler
-EQsolver = "custom_Newton" #custom_Newton / cN / fSolve / fS / Runge_Kutta_4 / RK4
+ODEsolver = "GL4" # implicit_Euler / iE / explicit_Euler /eE / Runge_Kutta_4 / RK4 / Gauss_Legendre_Runge_Kutta_4 / GL4
+EQsolver = "custom_Newton" #custom_Newton / cN / fSolve / fS
 Save_Data = True
 Save_Format = ".csv" # .csv, .txt, .npz
 Save_Filename = "Recording"
@@ -47,6 +55,8 @@ Time = 0
 dState = np.array( [ 0 ], dtype = np.float64 ) # (U_c) state depending on ODEs 
 State = np.array( [ 0, 0 ], dtype = np.float64 ) # (U_A, Rec) state not depending on ODEs 
 
+dSl = len(dState)
+
 def UI():
     INP = "Y"
     y = True
@@ -57,7 +67,7 @@ def UI():
             break
         if INP == "i":
             lb()
-            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("RK4", "Runge_Kutta_4").replace("_", " ")
+            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("RK4", "Runge_Kutta_4").replace("GL4", "Gauss_Legendre_Runge_Kutta_4").replace("_", " ")
             intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
             intvar0003 = "" if Save_Data == True else "not"
             intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
@@ -163,13 +173,15 @@ def f(t, d, s):
 
 def step(t, dState, State):
     
+    G0 = dState
+    
     if ODEsolver == "implicit_Euler" or ODEsolver == "iE":
         def F(xn):
             return xn - dState - DeltaTime * df(t, xn, State)
         if EQsolver == "custom_Newton" or EQsolver == "cN":
-            return newton_solve(F, dState)
+            return newton_solve(F, G0)
         if EQsolver == "fSolve" or EQsolver == "fS":
-            return sci.optimize.fsolve(F, dState)
+            return sci.optimize.fsolve(F, G0)
     
     if ODEsolver == "explicit_Euler" or ODEsolver == "eE":
         return State + DeltaTime * df(t, dState, State)
@@ -181,14 +193,17 @@ def step(t, dState, State):
         k4 = df(t + DeltaTime, dState + DeltaTime * k3, State)
         return dState + ( DeltaTime / 6 ) * ( k1 + 2 * k2 + 2 * k3 + k4 )
     
-    if ODEsolver == "Gauss_Legendre_Runge_Kutta_4" or ODEsolver == "GL4":
+    if ODEsolver == "Gauss_Legendre_Runge_Kutta_4" or ODEsolver == "GL4": #broken
         def F(k):
-            
-            return 
+            k1 = k[:dSl]
+            k2 = k[dSl:]
+            F1 = k1 - df(t + GL4_c1 * DeltaTime, dState + DeltaTime * ( GL4_a11 * k1 + GL4_a12 * k2 ), State)
+            F2 = k2 - df(t + GL4_c2 * DeltaTime, dState + DeltaTime * ( GL4_a21 * k1 + GL4_a22 * k2 ), State)
+            return np.concentrate(k1,k2)
         if EQsolver == "custom_Newton" or EQsolver == "cN":
-            
+            return newton_solve(F, G0)
         if EQsolver == "fSolve" or EQsolver == "fS":
-            
+            return sci.optimize.fsolve(F, G0)
         return dState + DeltaTime / 2 * ( k1 + k2 )
 
 dState = step(Time, dState, State)
