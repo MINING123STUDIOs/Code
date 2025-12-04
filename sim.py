@@ -39,29 +39,28 @@ TIME = np.arange(Burntime, Burntime + Timeframe, DeltaTime)
 Rec = np.zeros( steps )
 #---
 Time = 0
-dState = np.array( [ 0 ], dtype = np.float64 ) # (U_c)
-State = np.array( [ 0, 0 ], dtype = np.float64 ) # (U_A, Rec)
+dState = np.array( [ 0 ], dtype = np.float64 ) # (U_c) state depending on ODEs 
+State = np.array( [ 0, 0 ], dtype = np.float64 ) # (U_A, Rec) state not depending on ODEs 
 
 def UI():
     INP = "Y"
     y = True
     while y == True:
-        INP = input(f"Confirm simulating {steps + burnsteps} samples? [Y]/[N]/[i]")
-        if INP == "Y" or INP == "N":
+        INP = input(f"Confirm simulating {steps + burnsteps} samples? [Y]/[N]/[i]").casefold().strip()
+        if INP in [ "y", "n" ]:
             y = False
             break
         if INP == "i":
             intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("_", " ")
             intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
             print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
-            #lb()
             print(f"Using {intvar0001} with {intvar0002}.")
         else:
             print("Wrong input, please try again.")
 
-    if INP == "Y":
+    if INP == "y":
         pass
-    if INP == "N":
+    else: # INP == "n"
         exit()
 
 def newton_solve(F, x0, tol=1e-9, max_iter=20):
