@@ -199,11 +199,13 @@ def step(t, dState, State):
             k2 = k[dSl:]
             F1 = k1 - df(t + GL4_c1 * DeltaTime, dState + DeltaTime * ( GL4_a11 * k1 + GL4_a12 * k2 ), State)
             F2 = k2 - df(t + GL4_c2 * DeltaTime, dState + DeltaTime * ( GL4_a21 * k1 + GL4_a22 * k2 ), State)
-            return np.concentrate(k1,k2)
+            return np.concatenate(F1,F2)
         if EQsolver == "custom_Newton" or EQsolver == "cN":
-            return newton_solve(F, G0)
+            k = newton_solve(F, G0)
         if EQsolver == "fSolve" or EQsolver == "fS":
-            return sci.optimize.fsolve(F, G0)
+            k = sci.optimize.fsolve(F, G0)
+            k1 = k[:dSl]
+            k2 = k[dSl:]
         return dState + DeltaTime / 2 * ( k1 + k2 )
 
 dState = step(Time, dState, State)
