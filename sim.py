@@ -4,6 +4,7 @@ def lb():
 
 lb()
 # TODO: -/-
+# This is a universal ODE simulation framework.
 #importing standart libs.
 import matplotlib.pyplot as plt
 import numpy as np
@@ -48,12 +49,12 @@ m3 = 1
 #calculating secondary params
 burnsteps =  -int(- Burntime / DeltaTime) #number of required timesteps to burn
 steps = -int(-( Timeframe )/DeltaTime) #number of required timesteps
-progress_bar_update_time = int( ( steps + burnsteps ) / 100 )
+progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
 #---
 
 
 #working variables
-TIME = np.zeros( steps )#np.arange(Burntime, Burntime + Timeframe, DeltaTime)
+TIME = np.arange(Burntime, Burntime + Timeframe, DeltaTime)
 Rec = np.zeros( steps )
 #---
 Time = 0
@@ -97,7 +98,7 @@ def UI():
                         print("Exited console.")
                         pass
                     else:
-                        exec(cinp, globals())
+                        exec(cinp, globals()) #sketchy, but disableable
                         lb()
             else:
                 print("Incorrect numer!")
@@ -117,7 +118,7 @@ def newton_solve(F, x0, tol=1e-9, max_iter=20):
         Fx = F(x)
         if np.linalg.norm(Fx, ord=2) < tol:
             return x
-        J = np.zeros((n, n), dtype=float)
+        J = np.zeros((n, n), dtype=float) #needs to be numerical for universality.
         for i in range(n):
             x_pert = x.copy()
             x_pert[i] += eps
@@ -183,7 +184,7 @@ def df(t, x, s):
     
     r12 = np.sqrt( ( x2 - x1 ) ** 2 + ( y2 - y1 ) ** 2 ) ** 3
     r13 = np.sqrt( ( x3 - x1 ) ** 2 + ( y3 - y1 ) ** 2 ) ** 3
-    r23 = np.sqrt( ( x3 - x2 ) ** 2 + ( y3 - y2 ) ** 2 ) ** 3
+    r23 = np.sqrt( ( x3 - x2 ) ** 2 + ( y3 - y2 ) ** 2 ) ** 3 #numerically fragile, but fine
     
     dvx1 = Grav * ( m2 * ( x2 - x1 ) / r12 + m3 * ( x3 - x1 ) / r13 )
     dvy1 = Grav * ( m2 * ( y2 - y1 ) / r12 + m3 * ( y3 - y1 ) / r13 )
@@ -193,10 +194,17 @@ def df(t, x, s):
     dvy3 = Grav * ( m1 * ( y1 - y3 ) / r13 + m2 * ( y2 - y3 ) / r23 )
     
     x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11] = dx1, dy1, dvx1, dvy1, dx2, dy2, dvx2, dvy2, dx3, dy3, dvx3, dvy3
-    return x
+    return x # modifies input array instead of making a new one to improve performance
 
-def f(t, d, s):
-    Rec = 0
+def f(t, x, s):
+    x1, y1, vx1, vy1, x2, y2, vx2, vy2, x3, y3, vx3, vy3 = x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]
+    
+    r12 = np.sqrt( ( x2 - x1 ) ** 2 + ( y2 - y1 ) ** 2 )
+    r13 = np.sqrt( ( x3 - x1 ) ** 2 + ( y3 - y1 ) ** 2 )
+    r23 = np.sqrt( ( x3 - x2 ) ** 2 + ( y3 - y2 ) ** 2 )
+    
+    E = 0.5 * ( m1 * ( vx1 ** 2 + vy1 ** 2 ) + m2 * ( vx2 ** 2 + vy2 ** 2 ) + m3 * ( vx3 ** 2 + vy3 ** 2 ) ) - Grav * ( m1 * m2 / r12 + m1 * m3 / r13 + m2 * m3 / r23 )
+    Rec = E
     s[0] =  Rec
     return s # (U_A, Rec)
 
@@ -209,16 +217,16 @@ def eqsolve(F, G0):
             return op.root(F, G0, method="hybr")
 
 def step(t, dState, State):
-    
+    #solve for new state
     G0 = dState
     
     if ODEsolver == "implicit_Euler" or ODEsolver == "iE":
         def F(xn):
             return xn - dState - DeltaTime * df(t, xn, State)
-        return eqsolve(F, G0)
+        return eqsolve(F, G0) 
     
     if ODEsolver == "explicit_Euler" or ODEsolver == "eE":
-        return State + DeltaTime * df(t, dState, State)
+        return dState + DeltaTime * df(t, dState, State)
     
     if ODEsolver == "Runge_Kutta_4" or ODEsolver == "RK4":
         k1 = df(t, dState, State)
@@ -240,8 +248,8 @@ def step(t, dState, State):
         k2 = k[dSl:]
         return dState + DeltaTime / 2 * ( k1 + k2 )
 
-dState = step(Time, dState, State)
-State = f(Time, dState, State)
+#dState = step(Time, dState, State)
+#State = f(Time, dState, State)
 
 print("Done.")
 UI()
@@ -253,8 +261,8 @@ for x1 in range( steps + burnsteps ):
     State = f(Time, dState, State)
     dState = step(Time, dState, State)
     if x1 >= burnsteps: #recording data
-        Rec[x1 - burnsteps ] = dState[1]
-        TIME[x1 - burnsteps ] = dState[0]
+        Rec[x1 - burnsteps ] = State[0]
+        #TIME[x1 - burnsteps ] = dState[0]
     if x1 % progress_bar_update_time == 0:
         progress(100 * x1 / ( steps + burnsteps))
 progress(100)
@@ -280,7 +288,7 @@ if Save_Data == True:
         np.savetxt(f"{Save_Filename}.csv", D, delimiter=",")
 
 
-for ___ in range(3):
+for ___ in range(3): #basically redundant
     if len(s) > len(t):
         t = np.append(t, t[-1] + DeltaTime)
     
