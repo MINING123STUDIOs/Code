@@ -8,12 +8,14 @@ lb()
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sci
+import scipy.optimize as op
 import random as rng
 from scipy.special import lambertw
 import sys
 
 #setting constants 
 sigma = 5.670374419e-8 #W/m^2*K^4
+Grav = 1#6.6743e-11
 pi = np.pi
 ###
 GL4_c1 = 0.5 - ( 3 ** 0.5) / 6
@@ -23,39 +25,45 @@ GL4_a12 = 0.25 - ( 3 ** 0.5) / 6
 GL4_a21 = 0.25 + ( 3 ** 0.5) / 6
 GL4_b1 = GL4_b2 = 0.5
 ###
+eps = 1e-8
 
 #sim params
-Timeframe = 0.2 #s
+Timeframe = 200 #s
 Burntime = 0 #s
-DeltaTime = 1e-4 #s
+DeltaTime = 1e-1 #s
 Num_Damp = 1
-ODEsolver = "GL4" # implicit_Euler / iE / explicit_Euler /eE / Runge_Kutta_4 / RK4 / Gauss_Legendre_Runge_Kutta_4 / GL4
-EQsolver = "custom_Newton" #custom_Newton / cN / fSolve / fS
-Save_Data = True
+ODEsolver = "GLRK4" # implicit_Euler / iE / explicit_Euler /eE / Runge_Kutta_4 / RK4 / Gauss_Legendre_Runge_Kutta_4 / GL4
+EQsolver = "fS" #custom_Newton / cN / fSolve / fS
+Save_Data = False
 Save_Format = ".csv" # .csv, .txt, .npz
 Save_Filename = "Recording"
 Enable_console = True
 Confirm_num_len = 4
 #---
-R = 1e4
-C = 1e-6
-#current example: RC filter with white noise.
+m1 = 1
+m2 = 1
+m3 = 1
+#current example: 3 body problem.
 
 #calculating secondary params
 burnsteps =  -int(- Burntime / DeltaTime) #number of required timesteps to burn
 steps = -int(-( Timeframe )/DeltaTime) #number of required timesteps
+progress_bar_update_time = int( ( steps + burnsteps ) / 100 )
 #---
 
 
 #working variables
-TIME = np.arange(Burntime, Burntime + Timeframe, DeltaTime)
+TIME = np.zeros( steps )#np.arange(Burntime, Burntime + Timeframe, DeltaTime)
 Rec = np.zeros( steps )
 #---
 Time = 0
-dState = np.array( [ 0 ], dtype = np.float64 ) # (U_c) state depending on ODEs 
-State = np.array( [ 0, 0 ], dtype = np.float64 ) # (U_A, Rec) state not depending on ODEs 
+dState = np.array( [ -0.97000436, 0.2438753, 0.4662036850, 0.4323657300, 0.97000436, -0.24308753, 0.4662036850, 0.4323657300, 0, 0, -0.93240737, -0.86473146], dtype = np.float64 ) # (x1, y1, vx1, vy1, x2, y2, vx2, vy2, x3, y3, vx3, vy3) state depending on ODEs 
+State = np.array( [ 0 ], dtype = np.float64 ) # (Rec) state not depending on ODEs 
 
 dSl = len(dState)
+
+#figure 8: [ -0.97000436, 0.2438753, 0.4662036850, 0.4323657300, 0.97000436, -0.24308753, 0.4662036850, 0.4323657300, 0, 0, -0.93240737, -0.86473146]
+
 
 def UI():
     INP = "Y"
@@ -67,12 +75,13 @@ def UI():
             break
         if INP == "i":
             lb()
-            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("RK4", "Runge_Kutta_4").replace("GL4", "Gauss_Legendre_Runge_Kutta_4").replace("_", " ")
+            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK4", "Gauss_Legendre_Runge_Kutta_4").replace("RK4", "Runge_Kutta_4").replace("_", " ")
             intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
+            intvar0002a = f" with {intvar0002}" if ODEsolver in ["iE", "implicit_Euler", "GLRK4", "Gauss_Legendre_Runge_Kutta_4"] else ""
             intvar0003 = "" if Save_Data == True else "not"
             intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
             print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
-            print(f"Using {intvar0001} with {intvar0002}.")
+            print(f"Using {intvar0001}{intvar0002a}.")
             print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
             lb()
         elif INP == "console" and Enable_console == True:
@@ -83,8 +92,9 @@ def UI():
                 print("Console:")
                 lb()
                 while cinp != "exit":
-                    cinp = input(">>>").strip().replace("UI()", "print(\"This function is not available.\")") #
+                    cinp = input(">>>").replace("UI()", "print(\"This function is not available.\")") #
                     if cinp == "exit":
+                        print("Exited console.")
                         pass
                     else:
                         exec(cinp, globals())
@@ -97,32 +107,33 @@ def UI():
 
     if INP == "y":
         pass
-    else: # INP == "n"
+    else: 
         exit()
 
 def newton_solve(F, x0, tol=1e-9, max_iter=20):
     x = x0.astype(float).copy()
     n = len(x)
-
     for _ in range(max_iter):
         Fx = F(x)
         if np.linalg.norm(Fx, ord=2) < tol:
             return x
-
         J = np.zeros((n, n), dtype=float)
-        eps = 1e-8
-
         for i in range(n):
             x_pert = x.copy()
             x_pert[i] += eps
             J[:, i] = (F(x_pert) - Fx) / eps
-
         delta = np.linalg.solve(J, -Fx)
         x += delta
-
         if np.linalg.norm(delta, ord=2) < tol:
             return x
+    return x
 
+def scalar_solve(F, x0, tol=1e-9, max_iter=20):
+    x = x0
+    for i in range(max_iter):
+        x = x - eps * F(x) / ( F( x + eps ) - F( x ) )
+        if abs(F(x)) < tol:
+            return x
     return x
 
 def linint(hi, lo, s):
@@ -161,15 +172,41 @@ def safeexp(x):
      return np.exp(np.clip(x, a_max=700, a_min=-5e18))
 
 def df(t, x, s):
-    U = x[0]
-    U_A = s[1]
-    dU = ( U_A - U ) / ( R * C )
-    return np.array( [ dU ], dtype = np.float64 )
+    x1, y1, vx1, vy1, x2, y2, vx2, vy2, x3, y3, vx3, vy3 = x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]
+    
+    dx1 = vx1
+    dy1 = vy1
+    dx2 = vx2
+    dy2 = vy2
+    dx3 = vx3
+    dy3 = vy3
+    
+    r12 = np.sqrt( ( x2 - x1 ) ** 2 + ( y2 - y1 ) ** 2 ) ** 3
+    r13 = np.sqrt( ( x3 - x1 ) ** 2 + ( y3 - y1 ) ** 2 ) ** 3
+    r23 = np.sqrt( ( x3 - x2 ) ** 2 + ( y3 - y2 ) ** 2 ) ** 3
+    
+    dvx1 = Grav * ( m2 * ( x2 - x1 ) / r12 + m3 * ( x3 - x1 ) / r13 )
+    dvy1 = Grav * ( m2 * ( y2 - y1 ) / r12 + m3 * ( y3 - y1 ) / r13 )
+    dvx2 = Grav * ( m1 * ( x1 - x2 ) / r12 + m3 * ( x3 - x2 ) / r23 )
+    dvy2 = Grav * ( m1 * ( y1 - y2 ) / r12 + m3 * ( y3 - y2 ) / r23 )
+    dvx3 = Grav * ( m1 * ( x1 - x3 ) / r13 + m2 * ( x2 - x3 ) / r23 )
+    dvy3 = Grav * ( m1 * ( y1 - y3 ) / r13 + m2 * ( y2 - y3 ) / r23 )
+    
+    x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11] = dx1, dy1, dvx1, dvy1, dx2, dy2, dvx2, dvy2, dx3, dy3, dvx3, dvy3
+    return x
 
 def f(t, d, s):
-    U_A = clock(t, "wn", 1,-1,20)
-    Rec = U_A
-    return np.array( [ Rec, U_A ], dtype = np.float64 ) # (U_A, Rec)
+    Rec = 0
+    s[0] =  Rec
+    return s # (U_A, Rec)
+
+def eqsolve(F, G0):
+        if EQsolver == "custom_Newton" or EQsolver == "cN":
+            return newton_solve(F, G0)
+        if EQsolver == "fSolve" or EQsolver == "fS":
+            return op.fsolve(F, G0)
+        if EQsolver == "hybrid" or EQsolver == "hybr":
+            return op.root(F, G0, method="hybr")
 
 def step(t, dState, State):
     
@@ -178,10 +215,7 @@ def step(t, dState, State):
     if ODEsolver == "implicit_Euler" or ODEsolver == "iE":
         def F(xn):
             return xn - dState - DeltaTime * df(t, xn, State)
-        if EQsolver == "custom_Newton" or EQsolver == "cN":
-            return newton_solve(F, G0)
-        if EQsolver == "fSolve" or EQsolver == "fS":
-            return sci.optimize.fsolve(F, G0)
+        return eqsolve(F, G0)
     
     if ODEsolver == "explicit_Euler" or ODEsolver == "eE":
         return State + DeltaTime * df(t, dState, State)
@@ -193,7 +227,7 @@ def step(t, dState, State):
         k4 = df(t + DeltaTime, dState + DeltaTime * k3, State)
         return dState + ( DeltaTime / 6 ) * ( k1 + 2 * k2 + 2 * k3 + k4 )
     
-    if ODEsolver == "Gauss_Legendre_Runge_Kutta_4" or ODEsolver == "GL4": #broken
+    if ODEsolver == "Gauss_Legendre_Runge_Kutta_4" or ODEsolver == "GLRK4": 
         G0 = np.concatenate((G0,G0))
         def F(k):
             k1 = k[:dSl]
@@ -201,10 +235,7 @@ def step(t, dState, State):
             F1 = k1 - df(t + GL4_c1 * DeltaTime, dState + DeltaTime * ( GL4_a11 * k1 + GL4_a12 * k2 ), State)
             F2 = k2 - df(t + GL4_c2 * DeltaTime, dState + DeltaTime * ( GL4_a21 * k1 + GL4_a22 * k2 ), State)
             return np.concatenate((F1,F2))
-        if EQsolver == "custom_Newton" or EQsolver == "cN":
-            k = newton_solve(F, G0)
-        if EQsolver == "fSolve" or EQsolver == "fS":
-            k = sci.optimize.fsolve(F, G0)
+        k = eqsolve(F, G0)
         k1 = k[:dSl]
         k2 = k[dSl:]
         return dState + DeltaTime / 2 * ( k1 + k2 )
@@ -222,8 +253,11 @@ for x1 in range( steps + burnsteps ):
     State = f(Time, dState, State)
     dState = step(Time, dState, State)
     if x1 >= burnsteps: #recording data
-        Rec[x1 - burnsteps ] = dState[0]
-    progress(100 * x1 / ( steps + burnsteps))
+        Rec[x1 - burnsteps ] = dState[1]
+        TIME[x1 - burnsteps ] = dState[0]
+    if x1 % progress_bar_update_time == 0:
+        progress(100 * x1 / ( steps + burnsteps))
+progress(100)
 lb()
 print("1/1 Complete.")
 print("Please wait. . .")
