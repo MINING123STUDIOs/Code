@@ -55,7 +55,7 @@ progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
 
 
 #working variables
-TIME = np.arange(Burntime, Burntime + Timeframe, DeltaTime)
+TIME = np.linspace(Burntime, Burntime + Timeframe, steps)
 Rec = np.zeros( steps )
 #---
 Time = 0
@@ -255,6 +255,30 @@ def step(t, dState, State):
         k1 = k[:dSl]
         k2 = k[dSl:]
         return dState + DeltaTime / 2 * ( k1 + k2 )
+    
+    if ODEsolver == "Runge_Kutta_2" or ODEsolver = "RK2":
+        k1 = df(t, dState, State)
+        k2 = df(t + DeltaTime / 2, dState + DeltaTime / 2 * k1, State)
+        return dState + DeltaTime * k2
+        
+    if ODEsolver == "Gauss_Legendre_Runge_Kutta_2" or ODEsolver == "GLRK2":
+        def F(k):
+            return k - df(t + DeltaTime / 2, dState + DeltaTime / 2 * k, State)
+        return dState + DeltaTime * eqsolve(F, G0)
+     
+    if ODEsolver == "Runge_Kutta_6" or ODEsolver == "RK6":
+         k1 = df(t, dState, State)
+         k2 = df(t + DeltaTime / 3, dState + DeltaTime / 3 * k1, State)
+         k3 = df(t + DeltaTime / 3, dState + DeltaTime / 6 * ( k1 + k2 ), State)
+         k4 = df(t + DeltaTime, dState + DeltaTime * ( k1 + k2 + k3 ), State)
+         k5 = df(t + DeltaTime, dState + DeltaTime / 2 * ( k1 + k4 ), State)
+         k6 = df(t + DeltaTime / 2, dState + DeltaTime / 8 * ( -3 * k1 + 9 * k4 ), State)
+         k7 = df(t + DeltaTime, dState + DeltaTime * ( k1 / 2 - 3 * k3 / 2 + 2* k4 ), State)
+         return dState + DeltaTime * ( k1 / 12 + k3 / 4 + k5 / 3 + k7 / 4 )
+         
+    if ODEsolver == "Gauss_Legendre_Runge_Kutta_6" or ODEsolver == "GLRK6":
+        
+         return dState
 
 #dState = step(Time, dState, State)
 #State = f(Time, dState, State)
@@ -305,7 +329,7 @@ for ___ in range(3): #basically redundant
         s = np.append(s, s[-1])
 
 if len(s) != len(t):
-     lb()
+     lb() 
      print("\nData Error!")
      input("press Enter to exit.")
      exit()
