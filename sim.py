@@ -16,25 +16,44 @@ from scipy.special import lambertw
 import sys
 
 #setting constants 
-sigma = 5.670374419e-8 #W/m^2*K^4
-Grav = 1#6.6743e-11
-pi = np.pi
-###
-GL4_c1 = 0.5 - ( 3 ** 0.5) / 6
-GL4_c2 = 0.5 + ( 3 ** 0.5) / 6
-GL4_a11 = GL4_a22 = 0.25
-GL4_a12 = 0.25 - ( 3 ** 0.5) / 6
-GL4_a21 = 0.25 + ( 3 ** 0.5) / 6
-GL4_b1 = GL4_b2 = 0.5
-###
-eps = 1e-8
+for _ in range(1):
+    sigma = 5.670374419e-8 #W/m^2*K^4
+    Grav = 1#6.6743e-11
+    pi = np.pi
+    ###
+    GL4_c1 = 0.5 - ( 3 ** 0.5) / 6
+    GL4_c2 = 0.5 + ( 3 ** 0.5) / 6
+    GL4_a11 = GL4_a22 = 0.25
+    GL4_a12 = 0.25 - ( 3 ** 0.5) / 6
+    GL4_a21 = 0.25 + ( 3 ** 0.5) / 6
+    GL4_b1 = GL4_b2 = 0.5
+    ###
+    GL6_c1 = 0.5 - ( 15 ** 0.5 ) / 10
+    GL6_c2 = 0.5
+    GL6_c3 = 0.5 + ( 15 ** 0.5 ) / 10
+    
+    GL6_b1 = 5 / 18 
+    GL6_b2 = 4 / 9 
+    GL6_b3 = 5 / 18 
+    
+    GL6_a11 = 5 / 36 
+    GL6_a12 = 2 / 9  - ( 15 ** 0.5 ) / 15
+    GL6_a13 = 5 / 36 - ( 15 ** 0.5 ) / 30
+    GL6_a21 = 5 / 36 + ( 15 ** 0.5 ) / 24
+    GL6_a22 = 2 / 9 
+    GL6_a23 = 5 / 36 - ( 15 ** 0.5 ) / 24
+    GL6_a31 = 5 / 36 + ( 15 ** 0.5 ) / 30
+    GL6_a32 = 2 / 9  + ( 15 ** 0.5 ) / 15
+    GL6_a33 = 5 / 36 
+    ###
+    eps = 1e-8
 
 #sim params
-Timeframe = 200 #s
+Timeframe = 20 #s
 Burntime = 0 #s
-DeltaTime = 1e-1 #s
+DeltaTime = 1e-2 #s
 Num_Damp = 1
-ODEsolver = "GLRK4" # implicit_Euler / iE / explicit_Euler / eE / Runge_Kutta_4 / RK4 / Gauss_Legendre_Runge_Kutta_4 / GL4
+ODEsolver = "GLRK6" # implicit_Euler / iE / explicit_Euler / eE / Runge_Kutta_4 / RK4 / Gauss_Legendre_Runge_Kutta_4 / GL4
 EQsolver = "fS" #custom_Newton / cN / fSolve / fS
 Save_Data = False
 Save_Format = ".csv" # .csv, .txt, .npz
@@ -51,6 +70,8 @@ m3 = 1
 burnsteps =  -int(- Burntime / DeltaTime) #number of required timesteps to burn
 steps = -int(-( Timeframe )/DeltaTime) #number of required timesteps
 progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
+ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
+
 #---
 
 
@@ -66,7 +87,6 @@ dSl = len(dState)
 
 #figure 8: [ -0.97000436, 0.2438753, 0.4662036850, 0.4323657300, 0.97000436, -0.24308753, 0.4662036850, 0.4323657300, 0, 0, -0.93240737, -0.86473146]
 
-
 def UI():
     INP = "Y"
     y = True
@@ -77,7 +97,7 @@ def UI():
             break
         if INP == "i":
             lb()
-            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK4", "Gauss_Legendre_Runge_Kutta_4").replace("RK4", "Runge_Kutta_4").replace("_", " ")
+            intvar0001 = ODEsolver
             intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
             intvar0002a = f" with {intvar0002}" if ODEsolver in ["iE", "implicit_Euler", "GLRK4", "Gauss_Legendre_Runge_Kutta_4"] else ""
             intvar0003 = "" if Save_Data == True else "not"
@@ -228,22 +248,22 @@ def step(t, dState, State):
     #solve for new state
     G0 = dState
     
-    if ODEsolver == "implicit_Euler" or ODEsolver == "iE":
+    if ODEsolver == "implicit Euler":
         def F(xn):
             return xn - dState - DeltaTime * df(t, xn, State)
         return eqsolve(F, G0) 
     
-    if ODEsolver == "explicit_Euler" or ODEsolver == "eE":
+    if ODEsolver == "explicit Euler":
         return dState + DeltaTime * df(t, dState, State)
     
-    if ODEsolver == "Runge_Kutta_4" or ODEsolver == "RK4":
+    if ODEsolver == "Runge Kutta 4":
         k1 = df(t, dState, State)
         k2 = df(t + DeltaTime / 2, dState + DeltaTime * k1 / 2, State)
         k3 = df(t + DeltaTime / 2, dState + DeltaTime * k2 / 2, State)
         k4 = df(t + DeltaTime, dState + DeltaTime * k3, State)
         return dState + ( DeltaTime / 6 ) * ( k1 + 2 * k2 + 2 * k3 + k4 )
     
-    if ODEsolver == "Gauss_Legendre_Runge_Kutta_4" or ODEsolver == "GLRK4": 
+    if ODEsolver == "Gauss Legendre Runge Kutta 4": 
         G0 = np.concatenate((G0,G0))
         def F(k):
             k1 = k[:dSl]
@@ -256,17 +276,17 @@ def step(t, dState, State):
         k2 = k[dSl:]
         return dState + DeltaTime / 2 * ( k1 + k2 )
     
-    if ODEsolver == "Runge_Kutta_2" or ODEsolver = "RK2":
+    if ODEsolver == "Runge Kutta 2":
         k1 = df(t, dState, State)
         k2 = df(t + DeltaTime / 2, dState + DeltaTime / 2 * k1, State)
         return dState + DeltaTime * k2
         
-    if ODEsolver == "Gauss_Legendre_Runge_Kutta_2" or ODEsolver == "GLRK2":
+    if ODEsolver == "Gauss Legendre Runge Kutta 2":
         def F(k):
             return k - df(t + DeltaTime / 2, dState + DeltaTime / 2 * k, State)
         return dState + DeltaTime * eqsolve(F, G0)
      
-    if ODEsolver == "Runge_Kutta_6" or ODEsolver == "RK6":
+    if ODEsolver == "Runge Kutta 6":
          k1 = df(t, dState, State)
          k2 = df(t + DeltaTime / 3, dState + DeltaTime / 3 * k1, State)
          k3 = df(t + DeltaTime / 3, dState + DeltaTime / 6 * ( k1 + k2 ), State)
@@ -276,9 +296,25 @@ def step(t, dState, State):
          k7 = df(t + DeltaTime, dState + DeltaTime * ( k1 / 2 - 3 * k3 / 2 + 2* k4 ), State)
          return dState + DeltaTime * ( k1 / 12 + k3 / 4 + k5 / 3 + k7 / 4 )
          
-    if ODEsolver == "Gauss_Legendre_Runge_Kutta_6" or ODEsolver == "GLRK6":
+    if ODEsolver == "Gauss Legendre Runge Kutta 6":
+        G0 = np.concatenate((G0,G0,G0))
+        def F(k):
+            k1 = k[:dSl]
+            k2 = k[dSl:2*dSl]
+            k3 = k[2*dSl:]
+            
+            F1 = k1 - df(t + GL6_c1 * DeltaTime, dState + DeltaTime * ( GL6_a11 * k1 + GL6_a12 * k2 + GL6_a13 * k3 ), State)
+            F2 = k2 - df(t + GL6_c2 * DeltaTime, dState + DeltaTime * ( GL6_a21 * k1 + GL6_a22 * k2 + GL6_a23 * k3 ), State)
+            F3 = k3 - df(t + GL6_c3 * DeltaTime, dState + DeltaTime * ( GL6_a31 * k1 + GL6_a32 * k2 + GL6_a33 * k3 ), State)
+            
+            return np.concatenate((F1,F2,F3))
+        k = eqsolve(F, G0)
         
-         return dState
+        k1 = k[:dSl]
+        k2 = k[dSl:2*dSl]
+        k3 = k[2*dSl:]
+        
+        return dState + DeltaTime * ( GL6_b1 * k1 + GL6_b2 * k2 + GL6_b3 * k3 )
 
 #dState = step(Time, dState, State)
 #State = f(Time, dState, State)
