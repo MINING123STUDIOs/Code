@@ -99,7 +99,7 @@ def UI():
             lb()
             intvar0001 = ODEsolver
             intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
-            intvar0002a = f" with {intvar0002}" if ODEsolver in ["iE", "implicit_Euler", "GLRK4", "Gauss_Legendre_Runge_Kutta_4"] else ""
+            intvar0002a = f" with {intvar0002}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else ""
             intvar0003 = "" if Save_Data == True else "not"
             intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
             print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
@@ -222,7 +222,7 @@ def df(t, x, s):
     dvy3 = Grav * ( m1 * ( y1 - y3 ) / r13 + m2 * ( y2 - y3 ) / r23 )
     
     x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11] = dx1, dy1, dvx1, dvy1, dx2, dy2, dvx2, dvy2, dx3, dy3, dvx3, dvy3
-    return x # modifies input array instead of making a new one to improve performance
+    return x # modifies input array instead of making a new one to improve performance. Due to this being at the end it does NOT mutate the simulation.
 
 def f(t, x, s):
     x1, y1, vx1, vy1, x2, y2, vx2, vy2, x3, y3, vx3, vy3 = x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]
@@ -248,13 +248,18 @@ def step(t, dState, State):
     #solve for new state
     G0 = dState
     
+    if ODEsolver == "explicit Euler":
+        return dState + DeltaTime * df(t, dState, State)
+
     if ODEsolver == "implicit Euler":
         def F(xn):
             return xn - dState - DeltaTime * df(t, xn, State)
         return eqsolve(F, G0) 
     
-    if ODEsolver == "explicit Euler":
-        return dState + DeltaTime * df(t, dState, State)
+    if ODEsolver == "Runge Kutta 2":
+        k1 = df(t, dState, State)
+        k2 = df(t + DeltaTime / 2, dState + DeltaTime / 2 * k1, State)
+        return dState + DeltaTime * k2
     
     if ODEsolver == "Runge Kutta 4":
         k1 = df(t, dState, State)
@@ -263,6 +268,21 @@ def step(t, dState, State):
         k4 = df(t + DeltaTime, dState + DeltaTime * k3, State)
         return dState + ( DeltaTime / 6 ) * ( k1 + 2 * k2 + 2 * k3 + k4 )
     
+    if ODEsolver == "Runge Kutta 6":
+         k1 = df(t, dState, State)
+         k2 = df(t + DeltaTime / 3, dState + DeltaTime / 3 * k1, State)
+         k3 = df(t + DeltaTime / 3, dState + DeltaTime / 6 * ( k1 + k2 ), State)
+         k4 = df(t + DeltaTime, dState + DeltaTime * ( k1 + k2 + k3 ), State)
+         k5 = df(t + DeltaTime, dState + DeltaTime / 2 * ( k1 + k4 ), State)
+         k6 = df(t + DeltaTime / 2, dState + DeltaTime / 8 * ( -3 * k1 + 9 * k4 ), State)
+         k7 = df(t + DeltaTime, dState + DeltaTime * ( k1 / 2 - 3 * k3 / 2 + 2* k4 ), State)
+         return dState + DeltaTime * ( k1 / 12 + k3 / 4 + k5 / 3 + k7 / 4 )
+    
+    if ODEsolver == "Gauss Legendre Runge Kutta 2":
+        def F(k):
+            return k - df(t + DeltaTime / 2, dState + DeltaTime / 2 * k, State)
+        return dState + DeltaTime * eqsolve(F, G0)
+
     if ODEsolver == "Gauss Legendre Runge Kutta 4": 
         G0 = np.concatenate((G0,G0))
         def F(k):
@@ -276,26 +296,6 @@ def step(t, dState, State):
         k2 = k[dSl:]
         return dState + DeltaTime / 2 * ( k1 + k2 )
     
-    if ODEsolver == "Runge Kutta 2":
-        k1 = df(t, dState, State)
-        k2 = df(t + DeltaTime / 2, dState + DeltaTime / 2 * k1, State)
-        return dState + DeltaTime * k2
-        
-    if ODEsolver == "Gauss Legendre Runge Kutta 2":
-        def F(k):
-            return k - df(t + DeltaTime / 2, dState + DeltaTime / 2 * k, State)
-        return dState + DeltaTime * eqsolve(F, G0)
-     
-    if ODEsolver == "Runge Kutta 6":
-         k1 = df(t, dState, State)
-         k2 = df(t + DeltaTime / 3, dState + DeltaTime / 3 * k1, State)
-         k3 = df(t + DeltaTime / 3, dState + DeltaTime / 6 * ( k1 + k2 ), State)
-         k4 = df(t + DeltaTime, dState + DeltaTime * ( k1 + k2 + k3 ), State)
-         k5 = df(t + DeltaTime, dState + DeltaTime / 2 * ( k1 + k4 ), State)
-         k6 = df(t + DeltaTime / 2, dState + DeltaTime / 8 * ( -3 * k1 + 9 * k4 ), State)
-         k7 = df(t + DeltaTime, dState + DeltaTime * ( k1 / 2 - 3 * k3 / 2 + 2* k4 ), State)
-         return dState + DeltaTime * ( k1 / 12 + k3 / 4 + k5 / 3 + k7 / 4 )
-         
     if ODEsolver == "Gauss Legendre Runge Kutta 6":
         G0 = np.concatenate((G0,G0,G0))
         def F(k):
@@ -315,9 +315,6 @@ def step(t, dState, State):
         k3 = k[2*dSl:]
         
         return dState + DeltaTime * ( GL6_b1 * k1 + GL6_b2 * k2 + GL6_b3 * k3 )
-
-#dState = step(Time, dState, State)
-#State = f(Time, dState, State)
 
 print("Done.")
 lb()
