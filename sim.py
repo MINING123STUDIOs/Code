@@ -11,6 +11,7 @@ import numpy as np
 import scipy as sci
 import scipy.optimize as op
 import random as rng
+import string
 from scipy.special import lambertw
 import sys
 
@@ -33,13 +34,13 @@ Timeframe = 200 #s
 Burntime = 0 #s
 DeltaTime = 1e-1 #s
 Num_Damp = 1
-ODEsolver = "GLRK4" # implicit_Euler / iE / explicit_Euler /eE / Runge_Kutta_4 / RK4 / Gauss_Legendre_Runge_Kutta_4 / GL4
+ODEsolver = "GLRK4" # implicit_Euler / iE / explicit_Euler / eE / Runge_Kutta_4 / RK4 / Gauss_Legendre_Runge_Kutta_4 / GL4
 EQsolver = "fS" #custom_Newton / cN / fSolve / fS
 Save_Data = False
 Save_Format = ".csv" # .csv, .txt, .npz
 Save_Filename = "Recording"
 Enable_console = True
-Confirm_num_len = 4
+Confirm_num_len = 8
 #---
 m1 = 1
 m2 = 1
@@ -86,17 +87,20 @@ def UI():
             print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
             lb()
         elif INP == "console" and Enable_console == True:
-            RNGVAR = f"{rng.randint( 10 ** Confirm_num_len / 10, 10 ** Confirm_num_len - 1 )}"
+            #RNGVAR = f"{rng.randint( 10 ** Confirm_num_len / 10, 10 ** Confirm_num_len - 1 )}"
+            RNGVAR = rngstr(Confirm_num_len)
+            lb()
             print("Warning: usage of this function may break the softwear! Usage may also pose a security risk due to the execution of bad code!")
-            cinp = input(f"To confirm entering the console please enter the following number: {RNGVAR} \n")
+            cinp = input(f"To confirm entering the console please enter the following key: \n{RNGVAR} \n")
             if cinp == RNGVAR:
+                lb()
                 print("Console:")
                 lb()
-                while cinp != "exit":
+                while True:
                     cinp = input(">>>").replace("UI()", "print(\"This function is not available.\")") #
                     if cinp == "exit":
                         print("Exited console.")
-                        pass
+                        break
                     else:
                         exec(cinp, globals()) #sketchy, but disableable
                         lb()
@@ -110,6 +114,10 @@ def UI():
         pass
     else: 
         exit()
+
+def rngstr(length):
+    chars = string.ascii_letters * 2 + string.digits + "+-*/=()!%&?#_;:.,$"
+    return "".join( rng.choice( chars ) for _ in range( length ) )
 
 def newton_solve(F, x0, tol=1e-9, max_iter=20):
     x = x0.astype(float).copy()
@@ -252,6 +260,7 @@ def step(t, dState, State):
 #State = f(Time, dState, State)
 
 print("Done.")
+lb()
 UI()
 print("0/1 Complete.")
 
@@ -261,8 +270,8 @@ for x1 in range( steps + burnsteps ):
     State = f(Time, dState, State)
     dState = step(Time, dState, State)
     if x1 >= burnsteps: #recording data
-        Rec[x1 - burnsteps ] = State[0]
-        #TIME[x1 - burnsteps ] = dState[0]
+        Rec[x1 - burnsteps ] = dState[0]
+        TIME[x1 - burnsteps ] = dState[1]
     if x1 % progress_bar_update_time == 0:
         progress(100 * x1 / ( steps + burnsteps))
 progress(100)
