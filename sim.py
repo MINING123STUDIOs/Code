@@ -12,8 +12,9 @@ import scipy as sci
 import scipy.optimize as op
 import random as rng
 import string
-from scipy.special import lambertw
 import sys
+#from scipy.special import lambertw
+from matplotlib.animation import FuncAnimation
 
 #setting constants 
 for _ in range(1):
@@ -47,24 +48,31 @@ for _ in range(1):
     GL6_a33 = 5 / 36 
     ###
     eps = 1e-8
+    eps2 = 1e-1
 
 #sim params
-Timeframe = 20 #s
+Timeframe = 8 #s
 Burntime = 0 #s
 DeltaTime = 1e-2 #s
 Num_Damp = 1
-ODEsolver = "GLRK6" # implicit_Euler / iE / explicit_Euler / eE / Runge_Kutta_4 / RK4 / Gauss_Legendre_Runge_Kutta_4 / GL4
+ODEsolver = "GLRK2" # implicit_Euler / iE / explicit_Euler / eE / Runge_Kutta_4 / RK4 / Gauss_Legendre_Runge_Kutta_4 / GL4
 EQsolver = "fS" #custom_Newton / cN / fSolve / fS
 Save_Data = False
 Save_Format = ".csv" # .csv, .txt, .npz
 Save_Filename = "Recording"
 Enable_console = True
 Confirm_num_len = 8
+Plot = "Graph"
 #---
 m1 = 1
 m2 = 1
-m3 = 1
-#current example: 3 body problem.
+
+l1 = 1
+l2 = 1
+
+g = 9.81
+
+#current example: double pendulum
 
 #calculating secondary params
 burnsteps =  -int(- Burntime / DeltaTime) #number of required timesteps to burn
@@ -80,14 +88,14 @@ TIME = np.linspace(Burntime, Burntime + Timeframe, steps)
 Rec = np.zeros( steps )
 #---
 Time = 0
-dState = np.array( [ -0.97000436, 0.2438753, 0.4662036850, 0.4323657300, 0.97000436, -0.24308753, 0.4662036850, 0.4323657300, 0, 0, -0.93240737, -0.86473146], dtype = np.float64 ) # (x1, y1, vx1, vy1, x2, y2, vx2, vy2, x3, y3, vx3, vy3) state depending on ODEs 
+dState = np.array( [1, -1, 0, -3], dtype = np.float64 ) # (Theta1, Theta2, w1, w2) state depending on ODEs 
 State = np.array( [ 0 ], dtype = np.float64 ) # (Rec) state not depending on ODEs 
 
 dSl = len(dState)
 
-#figure 8: [ -0.97000436, 0.2438753, 0.4662036850, 0.4323657300, 0.97000436, -0.24308753, 0.4662036850, 0.4323657300, 0, 0, -0.93240737, -0.86473146]
-
 def UI():
+    print("Done.")
+    lb()
     INP = "Y"
     y = True
     while y == True:
@@ -102,6 +110,7 @@ def UI():
             intvar0002a = f" with {intvar0002}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else ""
             intvar0003 = "" if Save_Data == True else "not"
             intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
+            print(f"The Timestep in the simulation is set to {DeltaTime} seconds.")
             print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
             print(f"Using {intvar0001}{intvar0002a}.")
             print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
@@ -134,6 +143,7 @@ def UI():
         pass
     else: 
         exit()
+    print("0/1 Complete.")
 
 def rngstr(length):
     chars = string.ascii_letters * 2 + string.digits + "+-*/=()!%&?#_;:.,$"
@@ -201,39 +211,24 @@ def safeexp(x):
      return np.exp(np.clip(x, a_max=700, a_min=-5e18))
 
 def df(t, x, s):
-    x1, y1, vx1, vy1, x2, y2, vx2, vy2, x3, y3, vx3, vy3 = x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]
+    Theta1, Theta2, w1, w2 = x[0], x[1], x[2], x[3]
     
-    dx1 = vx1
-    dy1 = vy1
-    dx2 = vx2
-    dy2 = vy2
-    dx3 = vx3
-    dy3 = vy3
+    delta = Theta1 - Theta2
     
-    r12 = np.sqrt( ( x2 - x1 ) ** 2 + ( y2 - y1 ) ** 2 ) ** 3
-    r13 = np.sqrt( ( x3 - x1 ) ** 2 + ( y3 - y1 ) ** 2 ) ** 3
-    r23 = np.sqrt( ( x3 - x2 ) ** 2 + ( y3 - y2 ) ** 2 ) ** 3 #numerically fragile, but fine
+    dTheta1 = w1
+    dTheta2 = w2
     
-    dvx1 = Grav * ( m2 * ( x2 - x1 ) / r12 + m3 * ( x3 - x1 ) / r13 )
-    dvy1 = Grav * ( m2 * ( y2 - y1 ) / r12 + m3 * ( y3 - y1 ) / r13 )
-    dvx2 = Grav * ( m1 * ( x1 - x2 ) / r12 + m3 * ( x3 - x2 ) / r23 )
-    dvy2 = Grav * ( m1 * ( y1 - y2 ) / r12 + m3 * ( y3 - y2 ) / r23 )
-    dvx3 = Grav * ( m1 * ( x1 - x3 ) / r13 + m2 * ( x2 - x3 ) / r23 )
-    dvy3 = Grav * ( m1 * ( y1 - y3 ) / r13 + m2 * ( y2 - y3 ) / r23 )
+    Div = ( 2 * m1 + m2 - m2 * np.cos( 2 * delta ) )
     
-    x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11] = dx1, dy1, dvx1, dvy1, dx2, dy2, dvx2, dvy2, dx3, dy3, dvx3, dvy3
+    dw1 = ( - g * ( 2 * m2 + m1 ) * np.sin( Theta1 ) - m2 * g * np.sin( Theta1 - 2 * Theta2 ) - 2 * np.sin( delta ) * m2 * ( w2 ** 2 * l2 + w1 ** 2 * l1 * np.cos( delta ) ) ) / ( l1 * Div )
+    dw2 = ( 2 * np.sin( delta ) * ( w1 ** 2 * l1 * ( m1 + m2 ) + g * ( m1 + m2 ) * np.cos( Theta1 ) + w2 ** 2 * l2 * m2 * np.cos( delta ) ) ) / ( l2 * Div )
+    
+    x[0], x[1], x[2], x[3] = dTheta1, dTheta2, dw1, dw2
+    #np.nan_to_num(x)
     return x # modifies input array instead of making a new one to improve performance. Due to this being at the end it does NOT mutate the simulation.
 
 def f(t, x, s):
-    x1, y1, vx1, vy1, x2, y2, vx2, vy2, x3, y3, vx3, vy3 = x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[8], x[9], x[10], x[11]
     
-    r12 = np.sqrt( ( x2 - x1 ) ** 2 + ( y2 - y1 ) ** 2 )
-    r13 = np.sqrt( ( x3 - x1 ) ** 2 + ( y3 - y1 ) ** 2 )
-    r23 = np.sqrt( ( x3 - x2 ) ** 2 + ( y3 - y2 ) ** 2 )
-    
-    E = 0.5 * ( m1 * ( vx1 ** 2 + vy1 ** 2 ) + m2 * ( vx2 ** 2 + vy2 ** 2 ) + m3 * ( vx3 ** 2 + vy3 ** 2 ) ) - Grav * ( m1 * m2 / r12 + m1 * m3 / r13 + m2 * m3 / r23 )
-    Rec = E
-    s[0] =  Rec
     return s # (U_A, Rec)
 
 def eqsolve(F, G0):
@@ -316,10 +311,7 @@ def step(t, dState, State):
         
         return dState + DeltaTime * ( GL6_b1 * k1 + GL6_b2 * k2 + GL6_b3 * k3 )
 
-print("Done.")
-lb()
 UI()
-print("0/1 Complete.")
 
 for x1 in range( steps + burnsteps ):
     Time += DeltaTime #keeping time
@@ -337,7 +329,14 @@ print("1/1 Complete.")
 print("Please wait. . .")
 # post processing
 
+x1 = + l1 * np.sin(Rec)
+y1 = - l1 * np.cos(Rec)
 
+x2 = x1 + l2 * np.sin(TIME)
+y2 = y1 - l2 * np.cos(TIME)
+
+Rec = y2
+TIME = x2
 
 #plotting data
 
@@ -353,7 +352,6 @@ if Save_Data == True:
     if Save_Format == ".csv":
         np.savetxt(f"{Save_Filename}.csv", D, delimiter=",")
 
-
 for ___ in range(3): #basically redundant
     if len(s) > len(t):
         t = np.append(t, t[-1] + DeltaTime)
@@ -367,16 +365,30 @@ if len(s) != len(t):
      input("press Enter to exit.")
      exit()
 
-fig, ax = plt.subplots()
-ax.plot(t, s)
+if Plot == "Graph":
+    fig, ax = plt.subplots()
+    ax.plot(t, s)
 
-ax.set(xlabel='Time in s', ylabel='Y-axis',
-       title='Diagram')
-#ax.set_yscale("log")
-plt.tick_params(axis="both", which="both")
-ax.grid()
+    ax.set(xlabel='Time in s', ylabel='Y-axis',
+        title='Diagram')
+    #ax.set_yscale("log")
+    plt.tick_params(axis="both", which="both")
+    ax.grid()
 
-fig.savefig("test.png")
-print("Done.")
-plt.show()
+    fig.savefig("test.png")
+    print("Done.")
+    plt.show()
 
+elif Plot == "Animation":
+    fig, ax = plt.subplots()
+    point, = ax.plot([], [], "o")
+    ax.set_aspect("equal")
+    ax.set_xlim(-2, 2)
+    ax.set_ylim(-2, 2)
+    def update_anim(frame):
+        x = t[frame]
+        y = s[frame]
+        point.set_data(x, y)
+        return point,
+    ani = FuncAnimation(fig, update_anim, frames=len(t), interval=10)
+    plt.show()
