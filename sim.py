@@ -92,7 +92,7 @@ progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
 ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
 
 #---  
-FILECONTENT = readfile("sim.py")
+FILECONTENT = readfile("sim.py").replace("ec1d455a9d09faa4eb20722255eba31e", "")
 config = readfile("config.ini")
 FileHash = MD5(FILECONTENT)
 #print(FILECONTENT)
@@ -128,7 +128,8 @@ def UI():
             print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
             print(f"Using {intvar0001}{intvar0002a}.")
             print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
-            print(f"The MD5 of the current file is {FileHash}.")
+            print(f"The MD5 of the current file is                {FileHash}.")
+            print(f"The MD5 of the current file is supposed to be ec1d455a9d09faa4eb20722255eba31e.")
             lb()
         elif INP == "console" and Enable_console == True:
             #RNGVAR = f"{rng.randint( 10 ** Confirm_num_len / 10, 10 ** Confirm_num_len - 1 )}"
