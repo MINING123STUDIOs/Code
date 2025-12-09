@@ -14,6 +14,7 @@ import random as rng
 import string
 import sys
 import hashlib
+from cryptography.fernet import Fernet
 #from scipy.special import lambertw
 from matplotlib.animation import FuncAnimation
 
@@ -62,9 +63,9 @@ Save_Data = False
 Save_Format = ".csv" # .csv, .txt, .npz
 Save_Filename = "Recording"
 Enable_console = True
-Confirm_num_len = 8
+Confirm_num_len = 1
 Plot = "Graph"
-SuppHash = "677fdc3377cec562fe57c5bf877533da"
+SuppHash = "6879d4b0f18d8ccdf8de04319e532e3a"
 #---
 m1 = 1
 m2 = 1
@@ -85,6 +86,14 @@ def MD5(strg):
 def readfile(name):
     with open(name) as f: tmp = f.read()
     return tmp
+
+def encrypt(key, massage):
+    f = Fernet(key)
+    return f.encrypt(massage.encode("utf-8"))
+    
+def decrypt(key, digest):
+    f = Fernet(key)
+    return f.decrypt(digest)
 
 #calculating secondary params
 burnsteps =  -int(- Burntime / DeltaTime) #number of required timesteps to burn
