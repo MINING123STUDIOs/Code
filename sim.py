@@ -51,9 +51,9 @@ for _ in range(1):
     eps2 = 1e-1
 
 #sim params
-Timeframe = 8 #s
+Timeframe = 5 #s
 Burntime = 0 #s
-DeltaTime = 1e-2 #s
+DeltaTime = 2e-3 #s
 Num_Damp = 1
 ODEsolver = "GLRK2" # implicit_Euler / iE / explicit_Euler / eE / Runge_Kutta_4 / RK4 / Gauss_Legendre_Runge_Kutta_4 / GL4
 EQsolver = "fS" #custom_Newton / cN / fSolve / fS
@@ -88,7 +88,7 @@ TIME = np.linspace(Burntime, Burntime + Timeframe, steps)
 Rec = np.zeros( steps )
 #---
 Time = 0
-dState = np.array( [1, -1, 0, -3], dtype = np.float64 ) # (Theta1, Theta2, w1, w2) state depending on ODEs 
+dState = np.array( [0.2, 0, 0, 0], dtype = np.float64 ) # (Theta1, Theta2, w1, w2) state depending on ODEs 
 State = np.array( [ 0 ], dtype = np.float64 ) # (Rec) state not depending on ODEs 
 
 dSl = len(dState)
@@ -225,7 +225,7 @@ def df(t, x, s):
     
     x[0], x[1], x[2], x[3] = dTheta1, dTheta2, dw1, dw2
     #np.nan_to_num(x)
-    return x # modifies input array instead of making a new one to improve performance. Due to this being at the end it does NOT mutate the simulation.
+    return x #READ NOTE 1!!!
 
 def f(t, x, s):
     
@@ -380,15 +380,9 @@ if Plot == "Graph":
     plt.show()
 
 elif Plot == "Animation":
-    fig, ax = plt.subplots()
-    point, = ax.plot([], [], "o")
-    ax.set_aspect("equal")
-    ax.set_xlim(-2, 2)
-    ax.set_ylim(-2, 2)
-    def update_anim(frame):
-        x = t[frame]
-        y = s[frame]
-        point.set_data(x, y)
-        return point,
-    ani = FuncAnimation(fig, update_anim, frames=len(t), interval=10)
-    plt.show()
+    print(" I will implement it soon.")#⚠
+    
+    """NOTES:
+        Note 1:  modifies input array instead of making a new one to improve performance. Due to this being at the end and working one the local copy of dState it does NOT mutate the simulation.
+        
+    """
