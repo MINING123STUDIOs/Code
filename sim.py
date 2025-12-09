@@ -13,6 +13,7 @@ import scipy.optimize as op
 import random as rng
 import string
 import sys
+import hashlib
 #from scipy.special import lambertw
 from matplotlib.animation import FuncAnimation
 
@@ -74,14 +75,27 @@ g = 9.81
 
 #current example: double pendulum
 
+def imp():
+    print("This feature will be implemented soon.")
+
+def MD5(strg):
+    return hashlib.md5(strg.encode("utf8")).hexdigest()
+    
+def readfile(name):
+    with open(name) as f: tmp = f.read()
+    return tmp
+
 #calculating secondary params
 burnsteps =  -int(- Burntime / DeltaTime) #number of required timesteps to burn
 steps = -int(-( Timeframe )/DeltaTime) #number of required timesteps
 progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
 ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
 
-#---
-
+#---  
+FILECONTENT = readfile("sim.py")
+config = readfile("config.ini")
+FileHash = MD5(FILECONTENT)
+#print(FILECONTENT)
 
 #working variables
 TIME = np.linspace(Burntime, Burntime + Timeframe, steps)
@@ -114,6 +128,7 @@ def UI():
             print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
             print(f"Using {intvar0001}{intvar0002a}.")
             print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
+            print(f"The MD5 of the current file is {FileHash}.")
             lb()
         elif INP == "console" and Enable_console == True:
             #RNGVAR = f"{rng.randint( 10 ** Confirm_num_len / 10, 10 ** Confirm_num_len - 1 )}"
@@ -369,8 +384,8 @@ if Plot == "Graph":
     fig, ax = plt.subplots()
     ax.plot(t, s)
 
-    ax.set(xlabel='Time in s', ylabel='Y-axis',
-        title='Diagram')
+    ax.set(xlabel="Time in s", ylabel="Y-axis",
+        title="Diagram")
     #ax.set_yscale("log")
     plt.tick_params(axis="both", which="both")
     ax.grid()
@@ -380,9 +395,9 @@ if Plot == "Graph":
     plt.show()
 
 elif Plot == "Animation":
-    print(" I will implement it soon.")#⚠
+    imp()
     
     """NOTES:
         Note 1:  modifies input array instead of making a new one to improve performance. Due to this being at the end and working one the local copy of dState it does NOT mutate the simulation.
-        
+        ⚠
     """
