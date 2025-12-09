@@ -64,6 +64,7 @@ Save_Filename = "Recording"
 Enable_console = True
 Confirm_num_len = 8
 Plot = "Graph"
+SuppHash = "677fdc3377cec562fe57c5bf877533da"
 #---
 m1 = 1
 m2 = 1
@@ -92,7 +93,7 @@ progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
 ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
 
 #---  
-FILECONTENT = readfile("sim.py").replace("ec1d455a9d09faa4eb20722255eba31e", "")
+FILECONTENT = readfile("sim.py").replace(SuppHash, "")
 config = readfile("config.ini")
 FileHash = MD5(FILECONTENT)
 #print(FILECONTENT)
@@ -129,7 +130,9 @@ def UI():
             print(f"Using {intvar0001}{intvar0002a}.")
             print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
             print(f"The MD5 of the current file is                {FileHash}.")
-            print(f"The MD5 of the current file is supposed to be ec1d455a9d09faa4eb20722255eba31e.")
+            print(f"The MD5 of the current file is supposed to be {SuppHash}.")
+            if FileHash != SuppHash:
+                print(f"The current hash does NOT match the supposed hash. This indicates that the file has been modified sonce the last update of the supposed hash.")
             lb()
         elif INP == "console" and Enable_console == True:
             #RNGVAR = f"{rng.randint( 10 ** Confirm_num_len / 10, 10 ** Confirm_num_len - 1 )}"
@@ -142,7 +145,7 @@ def UI():
                 print("Console:")
                 lb()
                 while True:
-                    cinp = input(">>>").replace("UI()", "print(\"This function is not available.\")") #
+                    cinp = input(">>> ").replace("UI()", "print(\"This function is not available.\")") #
                     if cinp == "exit":
                         print("Exited console.")
                         break
