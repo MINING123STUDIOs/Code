@@ -62,8 +62,8 @@ EQsolver = "fS" #custom_Newton / cN / fSolve / fS
 Save_Data = False
 Save_Format = ".csv" # .csv, .txt, .npz
 Save_Filename = "Recording"
-Enable_console = True
-Confirm_num_len = 1
+Enable_console = False
+Confirm_num_len = 8
 Plot = "Graph"
 SuppHash = "6879d4b0f18d8ccdf8de04319e532e3a"
 #---
@@ -414,3 +414,4 @@ elif Plot == "Animation":
         Note 1:  modifies input array instead of making a new one to improve performance. Due to this being at the end and working one the local copy of dState it does NOT mutate the simulation.
         ⚠
     """
+
