@@ -48,12 +48,13 @@ burnsteps =  -int(- Burntime / DeltaTime) #number of required timesteps to burn
 steps = -int(-( Timeframe )/DeltaTime) #number of required timesteps
 progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
 ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
-
-#---  
 FILECONTENT = "\n\n#sim.py: \n\n" + readfile("sim.py").replace(SuppHash, "") + "\n\n#functions.py: \n\n" + readfile("functions.py") + "\n\n#config.ini: \n\n" + readfile("config.ini")
 FC = FILECONTENT
 config = readfile("config.ini")
 FileHash = MD5(FILECONTENT)
+#---
+
+
 
 #working variables
 TIME = np.linspace(Burntime, Burntime + Timeframe, steps)
@@ -84,7 +85,9 @@ def f(t, x, s):
     
     return s # (U_A, Rec)
 
-UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burntime, Timeframe, FileHash, SuppHash, Enable_console, Confirm_num_len)
+scope = globals()
+
+UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burntime, Timeframe, FileHash, SuppHash, Enable_console, Confirm_num_len, scope)
 
 for x1 in range( steps + burnsteps ):
     Time += DeltaTime #keeping time
@@ -134,7 +137,9 @@ D = np.array([t,s])
 save_file(Save_Data, Save_Format, Save_Filename, D)
 
 plot(Plot, t, s)
-    
+
+input("The end of the programm was reached. Press enter to exit.")
+
 """NOTES:
         Note 1:  modifies input array instead of making a new one to improve performance. Due to this being at the end and working one the local copy of dState it does NOT mutate the simulation.
         ⚠ *SnsymSP
