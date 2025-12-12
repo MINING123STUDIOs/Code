@@ -27,9 +27,8 @@ def MD5(strg):
     return hashlib.md5(strg.encode("utf8")).hexdigest()
 
 def clean(text):
-    text = text.replace("UI()", "print(\"This function is not available.\")").replace("FILECONTENT", "placeholder_var")
-    text = text.replace("FileHash", "placeholder_var").replace("config", "placeholder_var").replace("session_key", "placeholder_var")
-    
+    allowed = string.ascii_letters + string.digits + "_-."
+    text = "" if not all ( ch in allowed for ch in text ) else text
     
     return text
 
@@ -37,7 +36,7 @@ def rngstr(length):
     chars = string.ascii_letters * 2 + string.digits + "+-*/=()!%&?#_;:.,$"
     return "".join( rng.choice( chars ) for _ in range( length ) )
 
-def UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burntime, Timeframe, FileHash, SuppHash, Enable_console, Confirm_num_len):
+def UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burntime, Timeframe, FileHash, SuppHash, Enable_console, Confirm_num_len, scope):
     print("Done.")
     lb()
     INP = "Y"
@@ -54,6 +53,7 @@ def UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filen
             intvar0002a = f" with {intvar0002}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else ""
             intvar0003 = "" if Save_Data == True else "not"
             intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
+            
             print(f"The Timestep in the simulation is set to {DeltaTime} seconds.")
             print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
             print(f"Using {intvar0001}{intvar0002a}.")
@@ -63,7 +63,7 @@ def UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filen
             if FileHash != SuppHash:
                 print(f"The current hash does NOT match the supposed hash. This indicates that the file has been modified sonce the last update of the supposed hash.")
             lb()
-        elif INP == "console" and Enable_console == True:
+        elif ( INP == "console" or INP == "con" ) and Enable_console == True:
             #RNGVAR = f"{rng.randint( 10 ** Confirm_num_len / 10, 10 ** Confirm_num_len - 1 )}"
             RNGVAR = rngstr(Confirm_num_len)
             lb()
@@ -74,16 +74,35 @@ def UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filen
                 print("Console:")
                 lb()
                 while True:
-                    cinp = input(">>> ").replace("UI()", "print(\"This function is not available.\")") 
-                    cinp = clean(cinp)
+                    cinp = input(">>> ")
+                    lb()
                     if cinp == "exit":
                         print("Exited console.")
                         break
+                    elif cinp == "set":
+                        var = input("Enter the name of the variable you want to set: ")
+                        val = input("Enter the value you want to set the variable to: ")
+                        lb()
+                        val = clean(val)
+                        var = clean(var)
+                        exec(f"{var} = {val}", scope)
+                        #exec(f"{var} = {val}", locals())
+                        print(f"Set {var} to {val}.")
+                        lb()
+                    elif cinp == "inspect" or cinp == "ins":
+                        var = input("Enter the name of the variable you want to inspect: ")
+                        lb()
+                        exec(f"print({var})", scope)
+                        #exec(f"print({var})", locals())
+                        lb()
                     else:
-                        exec(cinp, globals()) #sketchy, but disableable
+                        lb()
+                        print("Invalid command!")
                         lb()
             else:
+                lb()
                 print("Incorrect numer!")
+                lb()
                 pass
         else:
             print("Wrong input, please try again.")
@@ -177,11 +196,11 @@ placeholder_var = 0
     exec(consts, globals())
  
 def save_file(Save_Data, Save_Format, Save_Filename, D):
-    if Save_Format == ".npz" and Save_Data:
+    if Save_Format == ".npz" and Save_Data == True:
         np.savez(f"{Save_Filename}.npz", D)
-    if Save_Format == ".txt" and Save_Data:
+    if Save_Format == ".txt" and Save_Data == True:
         np.savetxt(f"{Save_Filename}.txt", D)
-    if Save_Format == ".csv" and Save_Data:
+    if Save_Format == ".csv" and Save_Data == True:
         np.savetxt(f"{Save_Filename}.csv", D, delimiter=",")
 
 def eqsolve(F, G0, EQsolver):
