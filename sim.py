@@ -67,9 +67,14 @@ def f(t, x, s):
     
     return s # (U_A, Rec)
 
+def Rec_fun(State, dState):
+    Rec  = dState[0]
+    TIME = dState[1]
+    return Rec, TIME
+
 UI(ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burntime, Timeframe, FileHash, SuppHash, Enable_console, Confirm_num_len, scope)
 
-TIME, Rec = run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQsolver, False)
+TIME, Rec = run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQsolver, Rec_fun, True)
 
 mini_UI()
 
