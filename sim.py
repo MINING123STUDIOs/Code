@@ -1,22 +1,15 @@
 print("Setting up simulation. . . (advanced simulation model 2025)")
-
-# TODO: -/-
 # This is a universal ODE simulation framework.
 #importing standart libs.
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy as sci
-import scipy.optimize as op
-import random as rng
 import string
-import sys
-import hashlib
-from cryptography.fernet import Fernet
+import time
 from functions import *
 
-lb()
+scope = globals()
 
-set_const()
+set_const(scope)
 
 #sim params
 Timeframe = 5 #s
@@ -35,32 +28,21 @@ SuppHash = "b1fe0a2f2ac08455db72eba8a45d7999"
 #---
 m1 = 1
 m2 = 1
-
 l1 = 1
 l2 = 1
-
 g = 9.81
 
 #current example: double pendulum
 
 #calculating secondary params
-burnsteps =  -int(- Burntime / DeltaTime) #number of required timesteps to burn
-steps = -int(-( Timeframe )/DeltaTime) #number of required timesteps
-progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
-ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
-FILECONTENT = "\n\n#sim.py: \n\n" + readfile("sim.py").replace(SuppHash, "") + "\n\n#functions.py: \n\n" + readfile("functions.py") + "\n\n#config.ini: \n\n" + readfile("config.ini")
-FC = FILECONTENT
 config = readfile("config.ini")
-FileHash = MD5(FILECONTENT)
+FC = "\n\n#sim.py: \n\n" + readfile("sim.py").replace(SuppHash, "") + "\n\n#functions.py: \n\n" + readfile("functions.py") + "\n\n#config.ini: \n\n" + config
+FileHash = MD5(FC)
 #---
 
 
 
 #working variables
-TIME = np.linspace(Burntime, Burntime + Timeframe, steps)
-Rec = np.zeros( steps )
-#---
-Time = 0
 dState = np.array( [0.2, 0, 0, 0], dtype = np.float64 ) # (Theta1, Theta2, w1, w2) state depending on ODEs 
 State = np.array( [ 0 ], dtype = np.float64 ) # (Rec) state not depending on ODEs 
 
@@ -85,32 +67,17 @@ def f(t, x, s):
     
     return s # (U_A, Rec)
 
-scope = globals()
+UI(ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burntime, Timeframe, FileHash, SuppHash, Enable_console, Confirm_num_len, scope)
 
-UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burntime, Timeframe, FileHash, SuppHash, Enable_console, Confirm_num_len, scope)
-
-for x1 in range( steps + burnsteps ):
-    Time += DeltaTime #keeping time
-    #--- stuff VVV
-    State = f(Time, dState, State)
-    dState = step(df, Time, dState, State, ODEsolver, DeltaTime, EQsolver)
-    if x1 >= burnsteps: #recording data
-        Rec[x1 - burnsteps ] = dState[0]
-        TIME[x1 - burnsteps ] = dState[1]
-    if x1 % progress_bar_update_time == 0:
-        progress(100 * x1 / ( steps + burnsteps))
-        pass
+TIME, Rec = run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQsolver, False)
 
 mini_UI()
 
 # post processing
-
 x1 = + l1 * np.sin(Rec)
 y1 = - l1 * np.cos(Rec)
-
 x2 = x1 + l2 * np.sin(TIME)
 y2 = y1 - l2 * np.cos(TIME)
-
 Rec = y2
 TIME = x2
 
@@ -118,19 +85,6 @@ TIME = x2
 
 t = TIME
 s = np.nan_to_num(Rec)
-
-for ___ in range(3): #basically redundant
-    if len(s) > len(t):
-        t = np.append(t, t[-1] + DeltaTime)
-    
-    if len(t) > len(s):
-        s = np.append(s, s[-1])
-
-if len(s) != len(t):
-     lb() 
-     print("\nData Error!")
-     input("press Enter to exit.")
-     exit()
 
 D = np.array([t,s])
 
@@ -142,5 +96,5 @@ input("The end of the programm was reached. Press enter to exit.")
 
 """NOTES:
         Note 1:  modifies input array instead of making a new one to improve performance. Due to this being at the end and working one the local copy of dState it does NOT mutate the simulation.
-        ⚠ *SnsymSP
+        ⚠ *SnsymSP  .replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
 """
