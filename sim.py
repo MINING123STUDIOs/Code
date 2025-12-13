@@ -8,8 +8,7 @@ import time
 from functions import *
 
 scope = globals()
-
-set_const(scope)
+dlb = "\n\n"
 
 #sim params
 Timeframe = 5 #s
@@ -24,23 +23,14 @@ Save_Filename = "Recording"
 Enable_console = True
 Confirm_num_len = 8
 Plot = "Graph"
-SuppHash = "b1fe0a2f2ac08455db72eba8a45d7999"
+SuppHash = "def65f0076310ce873c9a248ab99474b"
+set_const(scope, SuppHash)
 #---
-m1 = 1
+m1 = 1 #current example: double pendulum
 m2 = 1
 l1 = 1
 l2 = 1
 g = 9.81
-
-#current example: double pendulum
-
-#calculating secondary params
-config = readfile("config.ini")
-FC = "\n\n#sim.py: \n\n" + readfile("sim.py").replace(SuppHash, "") + "\n\n#functions.py: \n\n" + readfile("functions.py") + "\n\n#config.ini: \n\n" + config
-FileHash = MD5(FC)
-#---
-
-
 
 #working variables
 dState = np.array( [0.2, 0, 0, 0], dtype = np.float64 ) # (Theta1, Theta2, w1, w2) state depending on ODEs 
@@ -76,21 +66,13 @@ UI(ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burnti
 
 TIME, Rec = run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQsolver, Rec_fun, True)
 
-mini_UI()
-
 # post processing
-x1 = + l1 * np.sin(Rec)
-y1 = - l1 * np.cos(Rec)
-x2 = x1 + l2 * np.sin(TIME)
-y2 = y1 - l2 * np.cos(TIME)
-Rec = y2
-TIME = x2
+Rec, TIME = - l1 * np.cos(Rec) - l2 * np.cos(TIME), + l1 * np.sin(Rec) + l2 * np.sin(TIME)
 
 #plotting data
 
 t = TIME
 s = np.nan_to_num(Rec)
-
 D = np.array([t,s])
 
 save_file(Save_Data, Save_Format, Save_Filename, D)
@@ -99,7 +81,7 @@ plot(Plot, t, s)
 
 input("The end of the programm was reached. Press enter to exit.")
 
-"""NOTES:
-        Note 1:  modifies input array instead of making a new one to improve performance. Due to this being at the end and working one the local copy of dState it does NOT mutate the simulation.
-        ⚠ *SnsymSP  .replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
+"""
+NOTES:
+Note 1:  modifies input array instead of making a new one to improve performance. Due to this being at the end and working one the local copy of dState it does NOT mutate the simulation.
 """
