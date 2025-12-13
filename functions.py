@@ -5,6 +5,7 @@ import scipy.optimize as op
 import random as rng
 import string
 import sys
+import time
 import hashlib
 from cryptography.fernet import Fernet
 
@@ -48,7 +49,8 @@ def UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filen
             break
         if INP == "i":
             lb()
-            intvar0001 = ODEsolver
+            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
+
             intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
             intvar0002a = f" with {intvar0002}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else ""
             intvar0003 = "" if Save_Data == True else "not"
@@ -61,13 +63,12 @@ def UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filen
             print(f"The MD5 of the current file is                {FileHash} .")
             print(f"The MD5 of the current file is supposed to be {SuppHash} .")
             if FileHash != SuppHash:
-                print(f"The current hash does NOT match the supposed hash. This indicates that the file has been modified sonce the last update of the supposed hash.")
+                print(f"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash.")
             lb()
         elif ( INP == "console" or INP == "con" ) and Enable_console == True:
-            #RNGVAR = f"{rng.randint( 10 ** Confirm_num_len / 10, 10 ** Confirm_num_len - 1 )}"
             RNGVAR = rngstr(Confirm_num_len)
             lb()
-            print("Warning: usage of this function may break the softwear! Usage may also pose a security risk due to the execution of bad code!")
+            print("Warning: usage of this function may break the softwear!")
             cinp = input(f"To confirm entering the console please enter the following key: \n{RNGVAR} \n")
             if cinp == RNGVAR:
                 lb()
@@ -78,6 +79,7 @@ def UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filen
                     lb()
                     if cinp == "exit":
                         print("Exited console.")
+                        lb()
                         break
                     elif cinp == "set":
                         var = input("Enter the name of the variable you want to set: ")
@@ -86,17 +88,23 @@ def UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filen
                         val = clean(val)
                         var = clean(var)
                         exec(f"{var} = {val}", scope)
-                        #exec(f"{var} = {val}", locals())
                         print(f"Set {var} to {val}.")
                         lb()
                     elif cinp == "inspect" or cinp == "ins":
                         var = input("Enter the name of the variable you want to inspect: ")
                         lb()
                         exec(f"print({var})", scope)
-                        #exec(f"print({var})", locals())
+                        lb()
+                    elif cinp == "str set" or cinp == "strset":
+                        var = input("Enter the name of the variable you want to set: ")
+                        val = input("Enter the string you want to set the variable to: ")
+                        lb()
+                        val = clean(val)
+                        var = clean(var)
+                        exec(f"{var} = '{val}'", scope)
+                        print(f"Set {var} to {val}.")
                         lb()
                     else:
-                        lb()
                         print("Invalid command!")
                         lb()
             else:
@@ -183,7 +191,7 @@ def safeexp(x):
 def lb():
     print("")
 
-def set_const():
+def set_const(scope):
     consts = """
 sigma = 5.670374419e-8 #W/m^2*K^4
 Grav = 1#6.6743e-11
@@ -193,7 +201,7 @@ eps = 1e-8
 eps2 = 1e-1
 placeholder_var = 0
     """
-    exec(consts, globals())
+    exec(consts, scope)
  
 def save_file(Save_Data, Save_Format, Save_Filename, D):
     if Save_Format == ".npz" and Save_Data == True:
@@ -301,3 +309,25 @@ def plot(Plot, t, s):
 
     elif Plot == "Animation":
         imp()
+
+def run_sim(State, dState, Timeframe, Burntime, steps, burnsteps, DeltaTime, f, df, ODEsolver, EQsolver, Show_bar):
+    
+    Time = 0
+    
+    TIME = np.linspace(Burntime, Burntime + Timeframe, steps)
+    Rec = np.zeros( steps )
+    
+    progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
+    
+    for x1 in range( steps + burnsteps ):
+        Time += DeltaTime #keeping time
+        #--- stuff VVV
+        State = f(Time, dState, State)
+        dState = step(df, Time, dState, State, ODEsolver, DeltaTime, EQsolver)
+        if x1 >= burnsteps: #recording data
+            Rec[x1 - burnsteps ] = dState[0]
+            TIME[x1 - burnsteps ] = dState[1]
+        if x1 % progress_bar_update_time == 0 and Show_bar == True:
+            progress(100 * x1 / ( steps + burnsteps))
+            pass
+    return TIME, Rec
