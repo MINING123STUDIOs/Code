@@ -317,7 +317,7 @@ def plot(Plot, t, s):
     elif Plot == "Animation":
         imp()
 
-def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQsolver, Show_bar):
+def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQsolver, Rec_fun, Show_bar = True):
     
     ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
     
@@ -337,9 +337,7 @@ def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQs
         State = f(Time, dState, State)
         dState = step(df, Time, dState, State, ODEsolver, DeltaTime, EQsolver)
         if x1 >= burnsteps: #recording data
-            Rec[x1 - burnsteps ] = dState[0]
-            TIME[x1 - burnsteps ] = dState[1]
+            Rec[x1 - burnsteps ], TIME[x1 - burnsteps ] = Rec_fun(State, dState)
         if x1 % progress_bar_update_time == 0 and Show_bar == True:
             progress(100 * x1 / ( steps + burnsteps))
-            pass
     return TIME, Rec
