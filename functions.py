@@ -37,10 +37,17 @@ def rngstr(length):
     chars = string.ascii_letters * 2 + string.digits + "+-*/=()!%&?#_;:.,$"
     return "".join( rng.choice( chars ) for _ in range( length ) )
 
-def UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burntime, Timeframe, FileHash, SuppHash, Enable_console, Confirm_num_len, scope):
+def UI(ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burntime, Timeframe, FileHash, SuppHash, Enable_console, Confirm_num_len, scope):
+    lb()
     print("Done.")
     lb()
     INP = "Y"
+    
+    ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
+    
+    steps = -int(-( Timeframe )/DeltaTime)
+    burnsteps =  -int(- Burntime / DeltaTime)
+    
     y = True
     while y == True:
         INP = input(f"Confirm simulating {steps + burnsteps} samples? [Y]/[N]/[i]").casefold().strip()
@@ -50,7 +57,6 @@ def UI(steps, burnsteps, ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filen
         if INP == "i":
             lb()
             intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
-
             intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
             intvar0002a = f" with {intvar0002}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else ""
             intvar0003 = "" if Save_Data == True else "not"
@@ -193,6 +199,7 @@ def lb():
 
 def set_const(scope):
     consts = """
+StartTime = time.perf_counter()
 sigma = 5.670374419e-8 #W/m^2*K^4
 Grav = 1#6.6743e-11
 pi = np.pi
@@ -310,7 +317,12 @@ def plot(Plot, t, s):
     elif Plot == "Animation":
         imp()
 
-def run_sim(State, dState, Timeframe, Burntime, steps, burnsteps, DeltaTime, f, df, ODEsolver, EQsolver, Show_bar):
+def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQsolver, Show_bar):
+    
+    ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
+    
+    steps = -int(-( Timeframe )/DeltaTime)
+    burnsteps =  -int(- Burntime / DeltaTime)
     
     Time = 0
     
