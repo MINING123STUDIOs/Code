@@ -127,12 +127,6 @@ def UI(ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Bu
         exit()
     print("0/1 Complete.")
 
-def mini_UI():
-    progress(100)
-    lb()
-    print("1/1 Complete.")
-    print("Please wait. . .")
-
 def newton_solve(F, x0, tol=1e-9, max_iter=20):
     x = x0.astype(float).copy()
     n = len(x)
@@ -197,8 +191,12 @@ def safeexp(x):
 def lb():
     print("")
 
-def set_const(scope):
+def set_const(scope, SuppHash):
     consts = """
+config = readfile("config.ini")
+t1, t2, t3 = dlb + "#sim.py: " + dlb, dlb + "#functions.py: " + dlb, dlb + "#config.ini: " + dlb
+FC = t1 + readfile("sim.py").replace(SuppHash, "") + t2 + readfile("functions.py") + t3 + config
+FileHash = MD5(FC)
 StartTime = time.perf_counter()
 sigma = 5.670374419e-8 #W/m^2*K^4
 Grav = 1#6.6743e-11
@@ -340,4 +338,8 @@ def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQs
             Rec[x1 - burnsteps ], TIME[x1 - burnsteps ] = Rec_fun(State, dState)
         if x1 % progress_bar_update_time == 0 and Show_bar == True:
             progress(100 * x1 / ( steps + burnsteps))
+    progress(100)
+    lb()
+    print("1/1 Complete.")
+    print("Please wait. . .")
     return TIME, Rec
