@@ -1,29 +1,25 @@
 print("Setting up simulation. . . (advanced simulation model 2025)")
 # This is a universal ODE simulation framework.
 #importing standart libs.
-import matplotlib.pyplot as plt
 import numpy as np
-import string
-import time
 from functions import *
 
 scope = globals()
-dlb = "\n\n"
 
 #sim params
-Timeframe = 5 #s
-Burntime = 0 #s
-DeltaTime = 2e-3 #s
-Num_Damp = 1
-ODEsolver = "GLRK4" # implicit_Euler / iE / explicit_Euler / eE / Runge_Kutta_4 / RK4 / Gauss_Legendre_Runge_Kutta_4 / GL4
-EQsolver = "fS" #custom_Newton / cN / fSolve / fS
-Save_Data = False
-Save_Format = ".csv" # .csv, .txt, .npz
-Save_Filename = "Recording"
-Enable_console = True
+Timeframe       = 5 
+Burntime        = 0 
+DeltaTime       = 2e-3 
+Num_Damp        = 1
+ODEsolver       = "GLRK4" 
+EQsolver        = "fS" 
+Save_Data       = False
+Save_Format     = ".csv" 
+Save_Filename   = "Recording"
+Enable_console  = True
 Confirm_num_len = 8
-Plot = "Graph"
-SuppHash = "def65f0076310ce873c9a248ab99474b"
+Plot            = "Graph"
+SuppHash        = "def65f0076310ce873c9a248ab99474b"
 set_const(scope, SuppHash)
 #---
 m1 = 1 #current example: double pendulum
