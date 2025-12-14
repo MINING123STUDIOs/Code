@@ -130,6 +130,7 @@ def UI(ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Bu
 def newton_solve(F, x0, tol=1e-9, max_iter=20):
     x = x0.astype(float).copy()
     n = len(x)
+    eps = 1e-8
     for _ in range(max_iter):
         Fx = F(x)
         if np.linalg.norm(Fx, ord=2) < tol:
@@ -147,6 +148,7 @@ def newton_solve(F, x0, tol=1e-9, max_iter=20):
 
 def scalar_solve(F, x0, tol=1e-9, max_iter=20):
     x = x0
+    eps = 1e-8
     for i in range(max_iter):
         x = x - eps * F(x) / ( F( x + eps ) - F( x ) )
         if abs(F(x)) < tol:
@@ -161,6 +163,7 @@ def linint(hi, lo, s):
     return hi * s + lo * ( 1 - s )
 
 def thermrad(A, emiss, T, T_amb):
+    sigma = 5.670374419e-8
     return A * emiss * sigma * ( ( T + 273.15 ) ** 4 - ( T_amb + 273.15 ) ** 4 )
 
 def clock(t, type, hi=1, lo=-1, f=1, duty=0.5, phase=0):
@@ -176,6 +179,8 @@ def clock(t, type, hi=1, lo=-1, f=1, duty=0.5, phase=0):
         return linint( hi, lo, rng.random() )
     if type == "0":
         return linint( hi, lo, 0 )
+    else:
+        return 0
 
 def progress(percent):
     percent = np.clip(percent, a_min=0, a_max=100)
@@ -186,26 +191,17 @@ def progress(percent):
     sys.stdout.flush()
 
 def safeexp(x):
-     return np.exp(np.clip(x, a_max=700, a_min=-5e18))
+     return np.exp(np.clip(x, a_max=700, a_min=-750))
 
 def lb():
     print("")
 
-def set_const(scope, SuppHash, sim_name="sim.py", config_name="config.ini"):
-    consts = f"""
-config = readfile("{config_name}")
-FC = "\\n\\n#{sim_name}: \\n\\n" + readfile("{sim_name}").replace(SuppHash, "") + "\\n\\n#functions.py: \\n\\n" + readfile("functions.py") + "\\n\\n#{config_name}: \\n\\n" + config
-FileHash = MD5(FC)
-StartTime = time.perf_counter()
-sigma = 5.670374419e-8 #W/m^2*K^4
-Grav = 1#6.6743e-11
-pi = np.pi
-###
-eps = 1e-8
-eps2 = 1e-1
-placeholder_var = 0
-    """
-    exec(consts, scope)
+def set_const(SuppHash, sim_name="sim.py", config_name="config.ini"):
+    config = readfile(f"{config_name}")
+    FC = f"\n\n#{sim_name}: \n\n" + readfile(f"{sim_name}").replace(SuppHash, "") + "\n\n#sim_API.py: \n\n" + readfile("sim_API.py") + f"\n\n#{config_name}: \n\n" + config
+    FileHash = MD5(FC)
+    StartTime = time.perf_counter()
+    return config, FC, FileHash, StartTime
  
 def save_file(Save_Data, Save_Format, Save_Filename, D):
     if Save_Format == ".npz" and Save_Data == True:
@@ -313,6 +309,8 @@ def plot(Plot, t, s):
 
     elif Plot == "Animation":
         imp()
+    
+    input("The end of the programm was reached. Press enter to exit.")
 
 def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQsolver, Rec_fun, Show_bar = True):
     
@@ -342,3 +340,6 @@ def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQs
     print("1/1 Complete.")
     print("Please wait. . .")
     return TIME, Rec
+
+def no_f(t, x, s):
+    return s
