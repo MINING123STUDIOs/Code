@@ -38,16 +38,15 @@ def rngstr(length):
     chars = string.ascii_letters * 2 + string.digits + "+-*/=()!%&?#_;:.,$"
     return "".join( rng.choice( chars ) for _ in range( length ) )
 
-def UI(ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burntime, Timeframe, FileHash, SuppHash, Enable_console, Confirm_num_len, scope):
+def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
     lb()
     print("Done.")
     lb()
     INP = "Y"
     
-    ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
     
-    steps = -int(-( Timeframe )/DeltaTime)
     burnsteps =  -int(- Burntime / DeltaTime)
+    steps = -int(-( Timeframe )/DeltaTime)
     
     y = True
     while y == True:
@@ -57,21 +56,26 @@ def UI(ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Bu
             break
         if INP == "i":
             lb()
-            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
-            intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
-            intvar0002a = f" with {intvar0002}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else ""
-            intvar0003 = "" if Save_Data == True else "not"
-            intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
-            
-            print(f"The Timestep in the simulation is set to {DeltaTime} seconds.")
-            print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
-            print(f"Using {intvar0001}{intvar0002a}.")
-            print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
-            print(f"The SHA256 of the current file is                {FileHash} .")
-            print(f"The SHA256 of the current file is supposed to be {SuppHash} .")
-            if FileHash != SuppHash:
-                print(f"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash.")
-            lb()
+            info = """
+ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
+steps = -int(-( Timeframe )/DeltaTime)
+burnsteps =  -int(- Burntime / DeltaTime)
+intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
+intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
+intvar0002a = f" with {intvar0002}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else ""
+intvar0003 = "" if Save_Data == True else "not"
+intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
+
+print(f"The Timestep in the simulation is set to {DeltaTime} seconds.")
+print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
+print(f"Using {intvar0001}{intvar0002a}.")
+print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
+print(f"The SHA256 of the current file is                {FileHash} .")
+print(f"The SHA256 of the current file is supposed to be {SuppHash} .")
+if FileHash != SuppHash:
+    print(f"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash.")
+lb()#"""
+            exec(info, scope)
         elif ( INP == "console" or INP == "con" ) and Enable_console == True:
             RNGVAR = rngstr(Confirm_num_len)
             lb()
