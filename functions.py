@@ -191,11 +191,10 @@ def safeexp(x):
 def lb():
     print("")
 
-def set_const(scope, SuppHash):
-    consts = """
-config = readfile("config.ini")
-t1, t2, t3 = dlb + "#sim.py: " + dlb, dlb + "#functions.py: " + dlb, dlb + "#config.ini: " + dlb
-FC = t1 + readfile("sim.py").replace(SuppHash, "") + t2 + readfile("functions.py") + t3 + config
+def set_const(scope, SuppHash, sim_name="sim.py", config_name="config.ini"):
+    consts = f"""
+config = readfile("{config_name}")
+FC = "\\n\\n#{sim_name}: \\n\\n" + readfile("{sim_name}").replace(SuppHash, "") + "\\n\\n#functions.py: \\n\\n" + readfile("functions.py") + "\\n\\n#{config_name}: \\n\\n" + config
 FileHash = MD5(FC)
 StartTime = time.perf_counter()
 sigma = 5.670374419e-8 #W/m^2*K^4
