@@ -18,7 +18,7 @@ Save_Filename   = "Recording"
 Enable_console  = True
 Confirm_num_len = 8
 Plot            = "Graph"
-SuppHash        = "7a920fa8f3d17e031e71fbb52eff6818fd907e1d8b0056d86160668ccbb97d80"
+SuppHash        = "7058f548ae82f80c02946cf9ff09835727a0a9d1aac71d79a4a37d242e7431b6"
 
 config, FC, FileHash, StartTime = set_const(SuppHash)
 #---
@@ -48,7 +48,7 @@ def df(t, x, s):
 def Rec_f(State, dState):
     return dState[0], dState[1]
 
-UI(ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Burntime, Timeframe, FileHash, SuppHash, Enable_console, Confirm_num_len, scope)
+UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope)
 
 TIME, Rec = run_sim(DeltaTime, State, dState, Timeframe, Burntime, no_f, df, ODEsolver, EQsolver, Rec_f, True)
 
