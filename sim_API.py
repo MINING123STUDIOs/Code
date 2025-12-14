@@ -27,11 +27,12 @@ def imp():
 def MD5(strg):
     return hashlib.md5(strg.encode("utf8")).hexdigest()
 
+def SHA256(strg):
+    return hashlib.sha256(strg.encode("utf8")).hexdigest()
+
 def clean(text):
     allowed = string.ascii_letters + string.digits + "_-."
-    text = "" if not all ( ch in allowed for ch in text ) else text
-    
-    return text
+    return "" if not all ( ch in allowed for ch in text ) else text
 
 def rngstr(length):
     chars = string.ascii_letters * 2 + string.digits + "+-*/=()!%&?#_;:.,$"
@@ -66,8 +67,8 @@ def UI(ODEsolver, EQsolver, Save_Data, Save_Format, Save_Filename, DeltaTime, Bu
             print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
             print(f"Using {intvar0001}{intvar0002a}.")
             print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
-            print(f"The MD5 of the current file is                {FileHash} .")
-            print(f"The MD5 of the current file is supposed to be {SuppHash} .")
+            print(f"The SHA256 of the current file is                {FileHash} .")
+            print(f"The SHA256 of the current file is supposed to be {SuppHash} .")
             if FileHash != SuppHash:
                 print(f"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash.")
             lb()
@@ -199,7 +200,7 @@ def lb():
 def set_const(SuppHash, sim_name="sim.py", config_name="config.ini"):
     config = readfile(f"{config_name}")
     FC = f"\n\n#{sim_name}: \n\n" + readfile(f"{sim_name}").replace(SuppHash, "") + "\n\n#sim_API.py: \n\n" + readfile("sim_API.py") + f"\n\n#{config_name}: \n\n" + config
-    FileHash = MD5(FC)
+    FileHash = SHA256(FC)
     StartTime = time.perf_counter()
     return config, FC, FileHash, StartTime
  
