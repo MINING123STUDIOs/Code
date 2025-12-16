@@ -123,6 +123,8 @@ lb()#"""
                 print("Incorrect numer!")
                 lb()
                 pass
+        elif INP == "" :
+            pass
         else:
             print("Wrong input, please try again.")
 
@@ -336,6 +338,7 @@ def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQs
         #--- stuff VVV
         State = f(Time, dState, State)
         dState = step(df, Time, dState, State, ODEsolver, DeltaTime, EQsolver)
+        #Sim_State = np.concatenate(State, dState)
         if x1 >= burnsteps: #recording data
             Rec[x1 - burnsteps ], TIME[x1 - burnsteps ] = Rec_fun(State, dState)
         if x1 % progress_bar_update_time == 0 and Show_bar == True:
@@ -346,5 +349,14 @@ def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQs
     print("Please wait. . .")
     return TIME, Rec
 
+def integrate(f, a, b, s): # \int_{a}^{b}f(x)dx
+    dx = ( b - a ) / s
+    x = a
+    c = 0
+    while x <= b:
+        c = c + dx * 0.5 * ( f( x ) + f( x + dx ) )
+        x += dx
+    return c
+     
 def no_f(t, x, s):
     return s
