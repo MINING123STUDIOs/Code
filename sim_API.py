@@ -353,10 +353,16 @@ def integrate(f, a, b, s): # \int_{a}^{b}f(x)dx
     dx = ( b - a ) / s
     x = a
     c = 0
+    fc = f( a )
+    fn = f( a )
     while x <= b:
-        c = c + dx * 0.5 * ( f( x ) + f( x + dx ) )
+        c += dx * 0.5 * ( fc + fn )
         x += dx
+        fc = fn
+        fn = f( x + dx )
     return c
-     
+ 
+#ädef 
+
 def no_f(t, x, s):
     return s
