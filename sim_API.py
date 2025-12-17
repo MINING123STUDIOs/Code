@@ -55,27 +55,27 @@ def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
             y = False
             break
         if INP == "i":
+            exec("""def query(): return ODEsolver, Timeframe, DeltaTime, Burntime, EQsolver, Save_Data, Save_Format, Save_Filename, SuppHash, FileHash""" ,scope)
             lb()
-            info = """
-ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
-steps = -int(-( Timeframe )/DeltaTime)
-burnsteps =  -int(- Burntime / DeltaTime)
-intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
-intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
-intvar0002a = f" with {intvar0002}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else ""
-intvar0003 = "" if Save_Data == True else "not"
-intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
+            ODEsolver, Timeframe, DeltaTime, Burntime, EQsolver, Save_Data, Save_Format, Save_Filename, SuppHash, FileHash = scope["query"]()
+            ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
+            steps     = -int( - Timeframe / DeltaTime )
+            burnsteps = -int( - Burntime  / DeltaTime )
+            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
+            intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
+            intvar0002a = f" with {intvar0002}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else ""
+            intvar0003 = "" if Save_Data == True else "not"
+            intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
 
-print(f"The Timestep in the simulation is set to {DeltaTime} seconds.")
-print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
-print(f"Using {intvar0001}{intvar0002a}.")
-print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
-print(f"The SHA256 of the current file is                {FileHash} .")
-print(f"The SHA256 of the current file is supposed to be {SuppHash} .")
-if FileHash != SuppHash:
-    print(f"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash.")
-lb()#"""
-            exec(info, scope)
+            print(f"The Timestep in the simulation is set to {DeltaTime} seconds.")
+            print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
+            print(f"Using {intvar0001}{intvar0002a}.")
+            print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
+            print(f"The SHA256 of the current file is                {FileHash} .")
+            print(f"The SHA256 of the current file is supposed to be {SuppHash} .")
+            if FileHash != SuppHash:
+                print(f"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash.")
+            lb()
         elif ( INP == "console" or INP == "con" ) and Enable_console == True:
             RNGVAR = rngstr(Confirm_num_len)
             lb()
@@ -83,7 +83,7 @@ lb()#"""
             cinp = input(f"To confirm entering the console please enter the following key: \n{RNGVAR} \n")
             if cinp == RNGVAR:
                 lb()
-                print("Console:")
+                print("Console:") # The console is so restrictive, that its safe.
                 lb()
                 while True:
                     cinp = input(">>> ")
@@ -299,13 +299,13 @@ def step(df, t, dState, State, ODEsolver, DeltaTime, EQsolver):
         
         return dState + DeltaTime * ( 5 / 18 * k1 + 4 / 9 * k2 + 5 / 18 * k3 )
 
-def plot(Plot, t, s):
+def plot(Plot, t, s, xlab="Time in s", ylab="Y-axis", dlab="Diagram"):
     if Plot == "Graph":
         fig, ax = plt.subplots()
         ax.plot(t, s)
 
-        ax.set(xlabel="Time in s", ylabel="Y-axis",
-            title="Diagram")
+        ax.set(xlabel=xlab, ylabel=ylab,
+            title=dlab)
         #ax.set_yscale("log")
         plt.tick_params(axis="both", which="both")
         ax.grid()
@@ -330,6 +330,8 @@ def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQs
     
     TIME = np.linspace(Burntime, Burntime + Timeframe, steps)
     Rec = np.zeros( steps )
+    
+    
     
     progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
     
@@ -359,10 +361,12 @@ def integrate(f, a, b, s): # \int_{a}^{b}f(x)dx
         c += dx * 0.5 * ( fc + fn )
         x += dx
         fc = fn
-        fn = f( x + dx )
+        if _ < s - 1:
+            fn = f( x + dx )
     return c
  
-#ädef 
+def drichelt_function(x):
+    return 1 # this is a joke,because computers can onlyrepresent and store rationals
 
 def no_f(t, x, s):
     return s
