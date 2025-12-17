@@ -1,4 +1,4 @@
-print("Setting up simulation. . . (advanced simulation model 2025)") 
+print("Setting up simulation. . .") 
 # This is a universal ODE simulation framework.
 #importing libs.
 import numpy as np
@@ -18,7 +18,7 @@ Save_Filename   = "Recording"
 Enable_console  = True
 Confirm_num_len = 8
 Plot            = "Graph"
-SuppHash        = "7058f548ae82f80c02946cf9ff09835727a0a9d1aac71d79a4a37d242e7431b6"
+SuppHash        = "fceb32a7a49ab54130b70bffbf89880c99dcaa31d8ee1334e090fbfa3d0ee383"
 
 config, FC, FileHash, StartTime = set_const(SuppHash)
 #---
@@ -42,22 +42,20 @@ def df(t, x, s):
     dw1 = ( - g * ( 2 * m2 + m1 ) * np.sin( Theta1 ) - m2 * g * np.sin( Theta1 - 2 * Theta2 ) - 2 * np.sin( delta ) * m2 * ( w2 ** 2 * l2 + w1 ** 2 * l1 * np.cos( delta ) ) ) / ( l1 * Div )
     dw2 = ( 2 * np.sin( delta ) * ( w1 ** 2 * l1 * ( m1 + m2 ) + g * ( m1 + m2 ) * np.cos( Theta1 ) + w2 ** 2 * l2 * m2 * np.cos( delta ) ) ) / ( l2 * Div )
     
-    x[0], x[1], x[2], x[3] = dTheta1, dTheta2, dw1, dw2 #read note 1.
-    return x 
+    y = np.zeros(4)
+    y[0], y[1], y[2], y[3] = dTheta1, dTheta2, dw1, dw2
+    return y 
 
 UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope)
 
 Rec, Error = run_sim(DeltaTime, State, dState, Timeframe, Burntime, no_f, df, ODEsolver, EQsolver, False)
 
-Time = Rec[1,:]
-Rec = Rec[2,:]
-
 # post processing
-Rec, Time = - l1 * np.cos(Rec) - l2 * np.cos(Time), + l1 * np.sin(Rec) + l2 * np.sin(Time)
+Theta1, Theta2 = Rec[1,:], Rec[2,:]
 
-#plotting data
-save_file(Save_Data, Save_Format, Save_Filename, np.array([Time,Rec]))
+y, x = - l1 * np.cos(Theta1) - l2 * np.cos(Theta2), + l1 * np.sin(Theta1) + l2 * np.sin(Theta2)
 
-plot(Plot, Time, Rec)
+#plotting & saving data
+save_file(Save_Data, Save_Format, Save_Filename, np.array([x,y]))
 
-#Note 1:  modifies input array instead of making a new one to improve performance. Due to this being at the end and working one the local copy of dState it does NOT mutate the simulation.
+plot(Plot, x, y)
