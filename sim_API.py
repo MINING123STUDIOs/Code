@@ -55,27 +55,12 @@ def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
             y = False
             break
         if INP == "i":
-            exec("""def query(): return ODEsolver, Timeframe, DeltaTime, Burntime, EQsolver, Save_Data, Save_Format, Save_Filename, SuppHash, FileHash""" ,scope)
-            lb()
+            exec("""def query(): return ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " "), Timeframe, DeltaTime, Burntime, EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " "), Save_Data, Save_Format, Save_Filename, SuppHash, FileHash""" ,scope)
             ODEsolver, Timeframe, DeltaTime, Burntime, EQsolver, Save_Data, Save_Format, Save_Filename, SuppHash, FileHash = scope["query"]()
-            ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
-            steps     = -int( - Timeframe / DeltaTime )
-            burnsteps = -int( - Burntime  / DeltaTime )
-            intvar0001 = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
-            intvar0002 = EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " ")
-            intvar0002a = f" with {intvar0002}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else ""
-            intvar0003 = "" if Save_Data == True else "not"
-            intvar0004 = f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""
-
-            print(f"The Timestep in the simulation is set to {DeltaTime} seconds.")
-            print(f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).")
-            print(f"Using {intvar0001}{intvar0002a}.")
-            print(f"The resulting data will {intvar0003} be saved to disk{intvar0004}.")
-            print(f"The SHA256 of the current file is                {FileHash} .")
-            print(f"The SHA256 of the current file is supposed to be {SuppHash} .")
-            if FileHash != SuppHash:
-                print(f"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash.")
-            lb()
+            steps, burnsteps = int( Timeframe / DeltaTime ), int( Burntime  / DeltaTime )
+            info = "\n" + f"The Timestep in the simulation is set to {DeltaTime} seconds." + f"\nUsing {ODEsolver}" + ( f" with {EQsolver}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else "" ) + ".\n" + f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).\n" + f"The resulting data will " + ( "" if Save_Data == True else "not" ) + f" be saved to disk" + ( f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else "" ) + ".\n" + f"The SHA256 of the current file is                {FileHash} .\nThe SHA256 of the current file is supposed to be {SuppHash} .\n"
+            if  FileHash != SuppHash: info = info + f"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash."
+            print(info + "\n")
         elif ( INP == "console" or INP == "con" ) and Enable_console == True:
             RNGVAR = rngstr(Confirm_num_len)
             lb()
@@ -86,7 +71,7 @@ def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
                 print("Console:") # The console is so restrictive, that its safe.
                 lb()
                 while True:
-                    cinp = input(">>> ")
+                    cinp = input(">>> ").casefold().strip()
                     lb()
                     if cinp == "exit":
                         print("Exited console.")
@@ -106,7 +91,7 @@ def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
                         lb()
                         exec(f"print({var})", scope)
                         lb()
-                    elif cinp == "str set" or cinp == "strset":
+                    elif cinp == "stringset" or cinp == "strset":
                         var = input("Enter the name of the variable you want to set: ")
                         val = input("Enter the string you want to set the variable to: ")
                         lb()
@@ -115,6 +100,10 @@ def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
                         exec(f"{var} = '{val}'", scope)
                         print(f"Set {var} to {val}.")
                         lb()
+                    elif cinp == "help":
+                        lb()
+                        print("Help menu:")
+                        print("Available commands: set, string set, ins, exit")
                     else:
                         print("Invalid command!")
                         lb()
