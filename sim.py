@@ -42,9 +42,9 @@ def df(t, x, s):
     dw1 = ( - g * ( 2 * m2 + m1 ) * np.sin( Theta1 ) - m2 * g * np.sin( Theta1 - 2 * Theta2 ) - 2 * np.sin( delta ) * m2 * ( w2 ** 2 * l2 + w1 ** 2 * l1 * np.cos( delta ) ) ) / ( l1 * Div )
     dw2 = ( 2 * np.sin( delta ) * ( w1 ** 2 * l1 * ( m1 + m2 ) + g * ( m1 + m2 ) * np.cos( Theta1 ) + w2 ** 2 * l2 * m2 * np.cos( delta ) ) ) / ( l2 * Div )
     
-    y = np.zeros(4)
-    y[0], y[1], y[2], y[3] = dTheta1, dTheta2, dw1, dw2
-    return y 
+    dx = np.zeros(4)
+    dx[0], dx[1], dx[2], dx[3] = dTheta1, dTheta2, dw1, dw2
+    return dx 
 
 UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope)
 
