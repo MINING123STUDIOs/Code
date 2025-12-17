@@ -45,8 +45,8 @@ def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
     INP = "Y"
     
     
-    burnsteps =  -int(- Burntime / DeltaTime)
-    steps = -int(-( Timeframe )/DeltaTime)
+    burnsteps =  int( Burntime / DeltaTime)
+    steps = int(( Timeframe )/DeltaTime)
     
     y = True
     while y == True:
@@ -132,7 +132,6 @@ def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
         pass
     else: 
         exit()
-    print("0/1 Complete.")
 
 def newton_solve(F, x0, tol=1e-9, max_iter=20):
     x = x0.astype(float).copy()
@@ -319,19 +318,22 @@ def plot(Plot, t, s, xlab="Time in s", ylab="Y-axis", dlab="Diagram"):
     
     input("The end of the programm was reached. Press enter to exit.")
 
-def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQsolver, Rec_fun, Show_bar = True):
+def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQsolver, Show_bar = True, Enable_UI = True):
+    
+    if Enable_UI == True:
+        print("0/1 Complete.")
     
     ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
     
-    steps = -int(-( Timeframe )/DeltaTime)
-    burnsteps =  -int(- Burntime / DeltaTime)
+    steps = int(( Timeframe )/DeltaTime)
+    burnsteps =  int( Burntime / DeltaTime)
     
     Time = 0
     
     TIME = np.linspace(Burntime, Burntime + Timeframe, steps)
-    Rec = np.zeros( steps )
+    Rec = np.zeros( (len(State) + len(dState) + 1, steps), dtype = np.float64)
     
-    
+    t_arr = np.array([0])
     
     progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
     
@@ -340,16 +342,29 @@ def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQs
         #--- stuff VVV
         State = f(Time, dState, State)
         dState = step(df, Time, dState, State, ODEsolver, DeltaTime, EQsolver)
-        #Sim_State = np.concatenate(State, dState)
+        
         if x1 >= burnsteps: #recording data
-            Rec[x1 - burnsteps ], TIME[x1 - burnsteps ] = Rec_fun(State, dState)
+            t_arr[0] = Time
+            Sim_State = np.concatenate( (State, dState, t_arr) )
+            Rec[:, x1 - burnsteps] = Sim_State
         if x1 % progress_bar_update_time == 0 and Show_bar == True:
-            progress(100 * x1 / ( steps + burnsteps))
-    progress(100)
-    lb()
-    print("1/1 Complete.")
-    print("Please wait. . .")
-    return TIME, Rec
+            progress(100 * ( x1 + 1 ) / ( steps + burnsteps))
+    ODEsolver = ODEsolver.replace(" ", "_")
+    if ODEsolver in ["explicit Euler", "implicit_Euler"]:
+        E_exp = 1
+    elif ODEsolver in ["Gauss_Legendre_Runge_Kutta_2", "Runge_Kutta_2"]:
+        E_exp = 2
+    elif ODEsolver in ["Gauss_Legendre_Runge_Kutta_4", "Runge_Kutta_4"]:
+        E_exp = 4
+    elif ODEsolver in ["Gauss_Legendre_Runge_Kutta_6", "Runge_Kutta_6"]:
+        E_exp = 6
+    Error = f"The global simulation error is on the order of O({DeltaTime ** E_exp:.2e})"
+    
+    if Enable_UI == True:
+        lb()
+        print("1/1 Complete.")
+        print("Please wait. . .")
+    return Rec, Error
 
 def integrate(f, a, b, s): # \int_{a}^{b}f(x)dx
     dx = ( b - a ) / s
