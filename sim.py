@@ -1,6 +1,6 @@
 print("Setting up simulation. . . (advanced simulation model 2025)") 
 # This is a universal ODE simulation framework.
-#importing standart libs.
+#importing libs.
 import numpy as np
 from sim_API import *
 
@@ -45,19 +45,19 @@ def df(t, x, s):
     x[0], x[1], x[2], x[3] = dTheta1, dTheta2, dw1, dw2 #read note 1.
     return x 
 
-def Rec_f(State, dState):
-    return dState[0], dState[1]
-
 UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope)
 
-TIME, Rec = run_sim(DeltaTime, State, dState, Timeframe, Burntime, no_f, df, ODEsolver, EQsolver, Rec_f, True)
+Rec, Error = run_sim(DeltaTime, State, dState, Timeframe, Burntime, no_f, df, ODEsolver, EQsolver, False)
+
+Time = Rec[1,:]
+Rec = Rec[2,:]
 
 # post processing
-Rec, TIME = - l1 * np.cos(Rec) - l2 * np.cos(TIME), + l1 * np.sin(Rec) + l2 * np.sin(TIME)
+Rec, Time = - l1 * np.cos(Rec) - l2 * np.cos(Time), + l1 * np.sin(Rec) + l2 * np.sin(Time)
 
 #plotting data
-save_file(Save_Data, Save_Format, Save_Filename, np.array([TIME,Rec]))
+save_file(Save_Data, Save_Format, Save_Filename, np.array([Time,Rec]))
 
-plot(Plot, TIME, Rec)
+plot(Plot, Time, Rec)
 
 #Note 1:  modifies input array instead of making a new one to improve performance. Due to this being at the end and working one the local copy of dState it does NOT mutate the simulation.
