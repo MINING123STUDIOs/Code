@@ -42,7 +42,7 @@ def df(t, x, s):
     dw1 = ( - g * ( 2 * m2 + m1 ) * np.sin( Theta1 ) - m2 * g * np.sin( Theta1 - 2 * Theta2 ) - 2 * np.sin( delta ) * m2 * ( w2 ** 2 * l2 + w1 ** 2 * l1 * np.cos( delta ) ) ) / ( l1 * Div )
     dw2 = ( 2 * np.sin( delta ) * ( w1 ** 2 * l1 * ( m1 + m2 ) + g * ( m1 + m2 ) * np.cos( Theta1 ) + w2 ** 2 * l2 * m2 * np.cos( delta ) ) ) / ( l2 * Div )
     
-    dx = np.zeros(4)
+    dx = np.zeros_like(x)
     dx[0], dx[1], dx[2], dx[3] = dTheta1, dTheta2, dw1, dw2
     return dx 
 
@@ -53,7 +53,7 @@ Rec, Error = run_sim(DeltaTime, State, dState, Timeframe, Burntime, no_f, df, OD
 # post processing
 Theta1, Theta2 = Rec[1,:], Rec[2,:]
 
-y, x = - l1 * np.cos(Theta1) - l2 * np.cos(Theta2), + l1 * np.sin(Theta1) + l2 * np.sin(Theta2)
+x, y = + l1 * np.sin(Theta1) + l2 * np.sin(Theta2), - l1 * np.cos(Theta1) - l2 * np.cos(Theta2)
 
 #plotting & saving data
 save_file(Save_Data, Save_Format, Save_Filename, np.array([x,y]))
