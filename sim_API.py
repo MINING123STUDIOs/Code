@@ -44,6 +44,7 @@ def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
     lb()
     INP = "Y"
     
+    imp_s = ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"]
     
     burnsteps =  int( Burntime / DeltaTime)
     steps = int(( Timeframe )/DeltaTime)
@@ -58,7 +59,16 @@ def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
             exec("""def query(): return ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " "), Timeframe, DeltaTime, Burntime, EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " "), Save_Data, Save_Format, Save_Filename, SuppHash, FileHash""" ,scope)
             ODEsolver, Timeframe, DeltaTime, Burntime, EQsolver, Save_Data, Save_Format, Save_Filename, SuppHash, FileHash = scope["query"]()
             steps, burnsteps = int( Timeframe / DeltaTime ), int( Burntime  / DeltaTime )
-            info = "\n" + f"The Timestep in the simulation is set to {DeltaTime} seconds." + f"\nUsing {ODEsolver}" + ( f" with {EQsolver}" if ODEsolver in ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"] else "" ) + ".\n" + f"Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).\n" + f"The resulting data will " + ( "" if Save_Data == True else "not" ) + f" be saved to disk" + ( f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else "" ) + ".\n" + f"The SHA256 of the current file is                {FileHash} .\nThe SHA256 of the current file is supposed to be {SuppHash} .\n" + ( f"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash." if FileHash != SuppHash else "" ) + "\n"
+            info = f"""
+
+The Timestep in the simulation is set to {DeltaTime} seconds.
+Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).
+Using {ODEsolver}{ f" with {EQsolver}" if ODEsolver in imp_s else "" }.
+The resulting data will {"" if Save_Data == True else "not"}be saved to disk {f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""}.
+The SHA256 of the current file is                {FileHash} .
+The SHA256 of the current file is supposed to be {SuppHash} .
+{"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash." if FileHash != SuppHash else ""}
+"""
             print(info)
         elif ( INP == "console" or INP == "con" ) and Enable_console == True:
             RNGVAR = rngstr(Confirm_num_len)
@@ -373,3 +383,12 @@ def drichelt_function(x):
 
 def no_f(t, x, s):
     return s
+    
+"""
+Recommended Project configuration:
+Project (Folder)
+│
+├──sim.py
+├──sim_API.py
+└──config.ini
+"""
