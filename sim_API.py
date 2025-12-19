@@ -38,6 +38,51 @@ def rngstr(length):
     chars = string.ascii_letters * 2 + string.digits + "+-*/=()!%&?#_;:.,$"
     return "".join( rng.choice( chars ) for _ in range( length ) )
 
+def norm_solver_name(name): 
+    return name.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
+
+def console(scope):
+    while True:
+        cinp = input(">>> ").casefold().strip()
+        lb()
+        if cinp == "exit":
+            print("Exited console.")
+            lb()
+            break
+        elif cinp == "set":
+            var = input("Enter the name of the variable you want to set: ")
+            val = input("Enter the value you want to set the variable to: ")
+            lb()
+            val = clean(val)
+            var = clean(var)
+            scope[var] = ( 1 * ( val ) )
+            print(f"Set {var} to {val}.")
+            lb()
+        elif cinp == "inspect" or cinp == "ins":
+            var = input("Enter the name of the variable you want to inspect: ")
+            lb()
+            if var in scope:
+                print(scope[var])
+            else:
+                print(f"No variable with the name \"{var}\" is defined.")
+            lb()
+        elif cinp == "stringset" or cinp == "strset":
+            var = input("Enter the name of the variable you want to set: ")
+            val = input("Enter the string you want to set the variable to: ")
+            lb()
+            val = clean(val)
+            var = clean(var)
+            scope[var] = val
+            print(f"Set {var} to {val}.")
+            lb()
+        elif cinp == "help":
+            lb()
+            print("Help menu:")
+            print("Available commands: set, string set, ins, exit")
+        else:
+            print("Invalid command!")
+            lb()
+
 def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
     lb()
     print("Done.")
@@ -56,8 +101,10 @@ def UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope):
             y = False
             break
         if INP == "i":
-            exec("""def query(): return ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " "), Timeframe, DeltaTime, Burntime, EQsolver.replace("cN", "custom_Newton").replace("fS", "fSolve").replace("_", " "), Save_Data, Save_Format, Save_Filename, SuppHash, FileHash""" ,scope)
-            ODEsolver, Timeframe, DeltaTime, Burntime, EQsolver, Save_Data, Save_Format, Save_Filename, SuppHash, FileHash = scope["query"]()
+            ODEsolver, EQsolver = scope["ODEsolver"], scope["EQsolver"]
+            Timeframe, DeltaTime, Burntime = scope["Timeframe"], scope["DeltaTime"], scope["Burntime"]
+            Save_Data, Save_Format, Save_Filename = scope["Save_Data"], scope["Save_Format"], scope["Save_Filename"]
+            SuppHash, FileHash = scope["SuppHash"], scope["FileHash"]
             steps, burnsteps = int( Timeframe / DeltaTime ), int( Burntime  / DeltaTime )
             info = f"""
 
@@ -79,43 +126,7 @@ The SHA256 of the current file is supposed to be {SuppHash} .
                 lb()
                 print("Console:") # The console is so restrictive, that its safe.
                 lb()
-                while True:
-                    cinp = input(">>> ").casefold().strip()
-                    lb()
-                    if cinp == "exit":
-                        print("Exited console.")
-                        lb()
-                        break
-                    elif cinp == "set":
-                        var = input("Enter the name of the variable you want to set: ")
-                        val = input("Enter the value you want to set the variable to: ")
-                        lb()
-                        val = clean(val)
-                        var = clean(var)
-                        exec(f"{var} = {val}", scope)
-                        print(f"Set {var} to {val}.")
-                        lb()
-                    elif cinp == "inspect" or cinp == "ins":
-                        var = input("Enter the name of the variable you want to inspect: ")
-                        lb()
-                        exec(f"print({var})", scope)
-                        lb()
-                    elif cinp == "stringset" or cinp == "strset":
-                        var = input("Enter the name of the variable you want to set: ")
-                        val = input("Enter the string you want to set the variable to: ")
-                        lb()
-                        val = clean(val)
-                        var = clean(var)
-                        exec(f"{var} = '{val}'", scope)
-                        print(f"Set {var} to {val}.")
-                        lb()
-                    elif cinp == "help":
-                        lb()
-                        print("Help menu:")
-                        print("Available commands: set, string set, ins, exit")
-                    else:
-                        print("Invalid command!")
-                        lb()
+                console(scope)
             else:
                 lb()
                 print("Incorrect numer!")
@@ -225,7 +236,7 @@ def eqsolve(F, G0, EQsolver):
  
 def step(df, t, dState, State, ODEsolver, DeltaTime, EQsolver):
     #solve for new state
-    G0  = dState
+    G0  = df(t, dState, State)
     dSl = len(dState)
     
     if ODEsolver == "explicit Euler":
@@ -285,7 +296,7 @@ def step(df, t, dState, State, ODEsolver, DeltaTime, EQsolver):
             
             F1 = k1 - df(t + ( 1 / 2 - ( 15 ** 0.5 ) / 10 ) * DeltaTime, dState + DeltaTime * ( ( 5 / 36                      ) * k1 + ( 2 / 9 - ( 15 ** 0.5 ) / 15 ) * k2 + ( 5 / 36 - ( 15 ** 0.5 ) / 30 ) * k3 ), State)
             F2 = k2 - df(t + ( 1 / 2                      ) * DeltaTime, dState + DeltaTime * ( ( 5 / 36 - ( 15 ** 0.5 ) / 24 ) * k1 + ( 2 / 9                      ) * k2 + ( 5 / 36 - ( 15 ** 0.5 ) / 24 ) * k3 ), State)
-            F3 = k3 - df(t + ( 1 / 2 - ( 15 ** 0.5 ) / 10 ) * DeltaTime, dState + DeltaTime * ( ( 5 / 36 + ( 15 ** 0.5 ) / 30 ) * k1 + ( 2 / 9 + ( 15 ** 0.5 ) / 15 ) * k2 + ( 5 / 36                      ) * k3 ), State)
+            F3 = k3 - df(t + ( 1 / 2 + ( 15 ** 0.5 ) / 10 ) * DeltaTime, dState + DeltaTime * ( ( 5 / 36 + ( 15 ** 0.5 ) / 30 ) * k1 + ( 2 / 9 + ( 15 ** 0.5 ) / 15 ) * k2 + ( 5 / 36                      ) * k3 ), State)
             
             return np.concatenate((F1,F2,F3))
         k = eqsolve(F, G0, EQsolver)
@@ -296,14 +307,20 @@ def step(df, t, dState, State, ODEsolver, DeltaTime, EQsolver):
         
         return dState + DeltaTime * ( 5 / 18 * k1 + 4 / 9 * k2 + 5 / 18 * k3 )
 
-def plot(Plot, t, s, xlab="Time in s", ylab="Y-axis", dlab="Diagram"):
-    if Plot == "Graph":
-        fig, ax = plt.subplots()
-        ax.plot(t, s)
-
+def plot(plot_type, d, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False ):
+    if plot_type == "Graph":
+        w = np.array(np.shape(d))
+        w = int(w[0] - 1)
+        print(w)
+        fig, ax = plt.subplots(layout='constrained')
+        for plot_num in range(w):
+            x, y = d[ w - 1, : ], d[ w, : ]
+            ax.plot(x, y, label=datalab[int( plot_num / 2 - 1 )])
+        
         ax.set(xlabel=xlab, ylabel=ylab,
             title=dlab)
-        #ax.set_yscale("log")
+        if logy:
+            ax.set_yscale("log")
         plt.tick_params(axis="both", which="both")
         ax.grid()
 
@@ -311,7 +328,7 @@ def plot(Plot, t, s, xlab="Time in s", ylab="Y-axis", dlab="Diagram"):
         print("Done.")
         plt.show()
 
-    elif Plot == "Animation":
+    elif plot_type == "Animation":
         imp()
     
     input("The end of the programm was reached. Press enter to exit.")
@@ -321,7 +338,7 @@ def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQs
     if Enable_UI == True:
         print("0/1 Complete.")
     
-    ODEsolver = ODEsolver.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
+    ODEsolver = norm_solver_name(ODEsolver)
     
     steps = int(( Timeframe )/DeltaTime)
     burnsteps =  int( Burntime / DeltaTime)
@@ -347,22 +364,12 @@ def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQs
             Rec[:, x1 - burnsteps] = Sim_State
         if x1 % progress_bar_update_time == 0 and Show_bar == True:
             progress(100 * ( x1 + 1 ) / ( steps + burnsteps))
-    ODEsolver = ODEsolver.replace(" ", "_")
-    if ODEsolver in ["explicit Euler", "implicit_Euler"]:
-        E_exp = 1
-    elif ODEsolver in ["Gauss_Legendre_Runge_Kutta_2", "Runge_Kutta_2"]:
-        E_exp = 2
-    elif ODEsolver in ["Gauss_Legendre_Runge_Kutta_4", "Runge_Kutta_4"]:
-        E_exp = 4
-    elif ODEsolver in ["Gauss_Legendre_Runge_Kutta_6", "Runge_Kutta_6"]:
-        E_exp = 6
-    Error = f"The global simulation error is on the order of O({DeltaTime ** E_exp:.2e})"
     
     if Enable_UI == True:
         lb()
         print("1/1 Complete.")
         print("Please wait. . .")
-    return Rec, Error
+    return Rec
 
 def integrate(f, a, b, s): # \int_{a}^{b}f(x)dx
     dx = ( b - a ) / s
@@ -377,9 +384,6 @@ def integrate(f, a, b, s): # \int_{a}^{b}f(x)dx
         if _ < s - 1:
             fn = f( x + dx )
     return c
- 
-def drichelt_function(x):
-    return 1 # this is a joke,because computers can onlyrepresent and store rationals
 
 def no_f(t, x, s):
     return s
