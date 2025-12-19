@@ -7,18 +7,18 @@ from sim_API import *
 scope = globals()
 
 #sim params
-Timeframe       = 5 
-Burntime        = 0 
-DeltaTime       = 2e-3 
-ODEsolver       = "GLRK4" 
-EQsolver        = "fS" 
-Save_Data       = False
-Save_Format     = ".csv" 
-Save_Filename   = "Recording"
-Enable_console  = True
-Confirm_num_len = 8
-Plot            = "Graph"
-SuppHash        = "fceb32a7a49ab54130b70bffbf89880c99dcaa31d8ee1334e090fbfa3d0ee383"
+Timeframe        = 5 
+Burntime         = 0 
+DeltaTime        = 2e-3 
+ODEsolver        = "GLRK6" 
+EQsolver         = "fS" 
+Save_Data        = False
+Save_Format      = ".csv" 
+Save_Filename    = "Recording"
+Enable_console   = True
+Confirm_num_len  = 8
+Plot             = "Graph"
+SuppHash         = "fceb32a7a49ab54130b70bffbf89880c99dcaa31d8ee1334e090fbfa3d0ee383"
 
 config, FC, FileHash, StartTime = set_const(SuppHash)
 #---
@@ -48,7 +48,7 @@ def df(t, x, s):
 
 UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope)
 
-Rec, Error = run_sim(DeltaTime, State, dState, Timeframe, Burntime, no_f, df, ODEsolver, EQsolver, False)
+Rec = run_sim(DeltaTime, State, dState, Timeframe, Burntime, no_f, df, ODEsolver, EQsolver, False)
 
 # post processing
 Theta1, Theta2 = Rec[1,:], Rec[2,:]
@@ -58,4 +58,4 @@ x, y = + l1 * np.sin(Theta1) + l2 * np.sin(Theta2), - l1 * np.cos(Theta1) - l2 *
 #plotting & saving data
 save_file(Save_Data, Save_Format, Save_Filename, np.array([x,y]))
 
-plot(Plot, x, y)
+plot(Plot, np.array([x,y]), ["a"])
