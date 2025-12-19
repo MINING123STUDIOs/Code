@@ -7,55 +7,55 @@ from sim_API import *
 scope = globals()
 
 #sim params
-Timeframe        = 5 
-Burntime         = 0 
-DeltaTime        = 2e-3 
-ODEsolver        = "GLRK6" 
-EQsolver         = "fS" 
-Save_Data        = False
-Save_Format      = ".csv" 
-Save_Filename    = "Recording"
-Enable_console   = True
-Confirm_num_len  = 8
-Plot             = "Graph"
-SuppHash         = "fceb32a7a49ab54130b70bffbf89880c99dcaa31d8ee1334e090fbfa3d0ee383"
+timeframe        = 5 
+burntime         = 0 
+delta_time       = 2e-3 
+ode_solver       = "GLRK2" 
+eq_solver        = "fS" 
+save_data        = False
+save_format      = ".csv" 
+save_filename    = "Recording"
+enable_console   = True
+confirm_num_len  = 8
+plot_type        = "Graph"
+supp_hash        = "fceb32a7a49ab54130b70bffbf89880c99dcaa31d8ee1334e090fbfa3d0ee383"
 
-config, FC, FileHash, StartTime = set_const(SuppHash)
+config, fc, file_hash, start_time = set_const(supp_hash)
 #---
 m1, m2, l1, l2 = 1, 1, 1, 1 #current example: double pendulum
 g = 9.81
 
 #working variables
-dState = np.array( [0.2, 0, 0, 0], dtype = np.float64 ) # (Theta1, Theta2, w1, w2) state depending on ODEs 
-State = np.array( [0], dtype = np.float64 ) # (Rec) state not depending on ODEs 
+d_state = np.array( [0.2, 0, 0, 0], dtype = np.float64 ) # (Theta1, Theta2, w1, w2) state depending on ODEs 
+state = np.array( [0], dtype = np.float64 ) # (Rec) state not depending on ODEs 
 
 def df(t, x, s):
-    Theta1, Theta2, w1, w2 = x[0], x[1], x[2], x[3]
+    theta1, theta2, w1, w2 = x[0], x[1], x[2], x[3]
     
-    delta = Theta1 - Theta2
+    delta = theta1 - theta2
     
-    dTheta1 = w1
-    dTheta2 = w2
+    dtheta1 = w1
+    dtheta2 = w2
     
     Div = ( 2 * m1 + m2 - m2 * np.cos( 2 * delta ) )
     
-    dw1 = ( - g * ( 2 * m2 + m1 ) * np.sin( Theta1 ) - m2 * g * np.sin( Theta1 - 2 * Theta2 ) - 2 * np.sin( delta ) * m2 * ( w2 ** 2 * l2 + w1 ** 2 * l1 * np.cos( delta ) ) ) / ( l1 * Div )
-    dw2 = ( 2 * np.sin( delta ) * ( w1 ** 2 * l1 * ( m1 + m2 ) + g * ( m1 + m2 ) * np.cos( Theta1 ) + w2 ** 2 * l2 * m2 * np.cos( delta ) ) ) / ( l2 * Div )
+    dw1 = ( - g * ( 2 * m2 + m1 ) * np.sin( theta1 ) - m2 * g * np.sin( theta1 - 2 * theta2 ) - 2 * np.sin( delta ) * m2 * ( w2 ** 2 * l2 + w1 ** 2 * l1 * np.cos( delta ) ) ) / ( l1 * Div )
+    dw2 = ( 2 * np.sin( delta ) * ( w1 ** 2 * l1 * ( m1 + m2 ) + g * ( m1 + m2 ) * np.cos( theta1 ) + w2 ** 2 * l2 * m2 * np.cos( delta ) ) ) / ( l2 * Div )
     
     dx = np.zeros_like(x)
-    dx[0], dx[1], dx[2], dx[3] = dTheta1, dTheta2, dw1, dw2
+    dx[0], dx[1], dx[2], dx[3] = dtheta1, dtheta2, dw1, dw2
     return dx 
 
-UI(DeltaTime, Burntime, Timeframe, Enable_console, Confirm_num_len, scope)
+UI(scope, enable_console, confirm_num_len)
 
-Rec = run_sim(DeltaTime, State, dState, Timeframe, Burntime, no_f, df, ODEsolver, EQsolver, False)
+rec = run_sim(delta_time, state, d_state, timeframe, burntime, no_f, df, ode_solver, eq_solver, False)
 
 # post processing
-Theta1, Theta2 = Rec[1,:], Rec[2,:]
+theta1, theta2 = rec[1,:], rec[2,:]
 
-x, y = + l1 * np.sin(Theta1) + l2 * np.sin(Theta2), - l1 * np.cos(Theta1) - l2 * np.cos(Theta2)
+x, y = + l1 * np.sin(theta1) + l2 * np.sin(theta2), - l1 * np.cos(theta1) - l2 * np.cos(theta2)
 
 #plotting & saving data
-save_file(Save_Data, Save_Format, Save_Filename, np.array([x,y]))
+save_file(save_data, save_format, save_filename, np.array([x,y]))
 
-plot(Plot, np.array([x,y]), ["a"])
+plot(plot_type, np.array([x,y]), ["a","b"])
