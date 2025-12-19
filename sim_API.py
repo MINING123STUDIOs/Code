@@ -95,86 +95,86 @@ def scalar_solve(F, x0, tol=1e-9, max_iter=20):
             return x
     return x
 
-def eqsolve(F, G0, EQsolver):
-        if EQsolver == "custom_Newton" or EQsolver == "cN":
+def eqsolve(F, G0, eq_solver):
+        if eq_solver == "custom_Newton" or eq_solver == "cN":
             return newton_solve(F, G0)
-        if EQsolver == "fSolve" or EQsolver == "fS":
+        if eq_solver == "fSolve" or eq_solver == "fS":
             return op.fsolve(F, G0)
-        if EQsolver == "hybrid" or EQsolver == "hybr":
+        if eq_solver == "hybrid" or eq_solver == "hybr":
             return op.root(F, G0, method="hybr")
  
-def step(df, t, dState, State, ODEsolver, DeltaTime, EQsolver):
+def step(df, t, d_state, state, ode_solver, delta_time, eq_solver):
     #solve for new state
-    G0  = df(t, dState, State)
-    dSl = len(dState)
+    g0  = df(t, d_state, state)
+    dsl = len(d_state)
     
-    if ODEsolver == "explicit Euler":
-        return dState + DeltaTime * df(t, dState, State)
+    if ode_solver == "explicit Euler":
+        return d_state + delta_time * df(t, d_state, state)
 
-    if ODEsolver == "implicit Euler":
+    if ode_solver == "implicit Euler":
         def F(xn):
-            return xn - dState - DeltaTime * df(t, xn, State)
-        return eqsolve(F, G0, EQsolver) 
+            return xn - d_state - delta_time * df(t, xn, state)
+        return eqsolve(F, g0, eq_solver) 
     
-    if ODEsolver == "Runge Kutta 2":
-        k1 = df(t, dState, State)
-        k2 = df(t + DeltaTime / 2, dState + DeltaTime / 2 * k1, State)
-        return dState + DeltaTime * k2
+    if ode_solver == "Runge Kutta 2":
+        k1 = df(t, d_state, state)
+        k2 = df(t + delta_time / 2, d_state + delta_time / 2 * k1, state)
+        return d_state + delta_time * k2
     
-    if ODEsolver == "Runge Kutta 4":
-        k1 = df(t, dState, State)
-        k2 = df(t + DeltaTime / 2, dState + DeltaTime * k1 / 2, State)
-        k3 = df(t + DeltaTime / 2, dState + DeltaTime * k2 / 2, State)
-        k4 = df(t + DeltaTime, dState + DeltaTime * k3, State)
-        return dState + ( DeltaTime / 6 ) * ( k1 + 2 * k2 + 2 * k3 + k4 )
+    if ode_solver == "Runge Kutta 4":
+        k1 = df(t, d_state, state)
+        k2 = df(t + delta_time / 2, d_state + delta_time * k1 / 2, state)
+        k3 = df(t + delta_time / 2, d_state + delta_time * k2 / 2, state)
+        k4 = df(t + delta_time, d_state + delta_time * k3, state)
+        return d_state + ( delta_time / 6 ) * ( k1 + 2 * k2 + 2 * k3 + k4 )
     
-    if ODEsolver == "Runge Kutta 6":
-         k1 = df(t, dState, State)
-         k2 = df(t + DeltaTime / 3, dState + DeltaTime / 3 * k1, State)
-         k3 = df(t + DeltaTime / 3, dState + DeltaTime / 6 * ( k1 + k2 ), State)
-         k4 = df(t + DeltaTime, dState + DeltaTime * ( k1 + k2 + k3 ), State)
-         k5 = df(t + DeltaTime, dState + DeltaTime / 2 * ( k1 + k4 ), State)
-         k6 = df(t + DeltaTime / 2, dState + DeltaTime / 8 * ( -3 * k1 + 9 * k4 ), State)
-         k7 = df(t + DeltaTime, dState + DeltaTime * ( k1 / 2 - 3 * k3 / 2 + 2* k4 ), State)
-         return dState + DeltaTime * ( k1 / 12 + k3 / 4 + k5 / 3 + k7 / 4 )
+    if ode_solver == "Runge Kutta 6":
+         k1 = df(t, d_state, state)
+         k2 = df(t + delta_time / 3, d_state + delta_time / 3 * k1, state)
+         k3 = df(t + delta_time / 3, d_state + delta_time / 6 * ( k1 + k2 ), state)
+         k4 = df(t + delta_time, d_state + delta_time * ( k1 + k2 + k3 ), state)
+         k5 = df(t + delta_time, d_state + delta_time / 2 * ( k1 + k4 ), state)
+         k6 = df(t + delta_time / 2, d_state + delta_time / 8 * ( -3 * k1 + 9 * k4 ), state)
+         k7 = df(t + delta_time, d_state + delta_time * ( k1 / 2 - 3 * k3 / 2 + 2* k4 ), state)
+         return d_state + delta_time * ( k1 / 12 + k3 / 4 + k5 / 3 + k7 / 4 )
     
-    if ODEsolver == "Gauss Legendre Runge Kutta 2":
+    if ode_solver == "Gauss Legendre Runge Kutta 2":
         def F(k):
-            return k - df(t + DeltaTime / 2, dState + DeltaTime / 2 * k, State)
-        return dState + DeltaTime * eqsolve(F, G0, EQsolver)
+            return k - df(t + delta_time / 2, d_state + delta_time / 2 * k, state)
+        return d_state + delta_time * eqsolve(F, g0, eq_solver)
 
-    if ODEsolver == "Gauss Legendre Runge Kutta 4": 
-        G0 = np.concatenate((G0,G0))
+    if ode_solver == "Gauss Legendre Runge Kutta 4": 
+        g0 = np.concatenate((g0,g0))
         def F(k):
-            k1 = k[:dSl]
-            k2 = k[dSl:]
-            F1 = k1 - df(t + ( 0.5 - ( 3 ** 0.5) / 6 ) * DeltaTime, dState + DeltaTime * ( ( 1 / 4                  ) * k1 + ( 1 / 4 - ( 3 ** 0.5) / 6 ) * k2 ), State)
-            F2 = k2 - df(t + ( 0.5 + ( 3 ** 0.5) / 6 ) * DeltaTime, dState + DeltaTime * ( ( 1 / 4 + ( 3 ** 0.5) / 6) * k1 + ( 1 / 4                   ) * k2 ), State)
+            k1 = k[:dsl]
+            k2 = k[dsl:]
+            F1 = k1 - df(t + ( 0.5 - ( 3 ** 0.5) / 6 ) * delta_time, d_state + delta_time * ( ( 1 / 4                  ) * k1 + ( 1 / 4 - ( 3 ** 0.5) / 6 ) * k2 ), state)
+            F2 = k2 - df(t + ( 0.5 + ( 3 ** 0.5) / 6 ) * delta_time, d_state + delta_time * ( ( 1 / 4 + ( 3 ** 0.5) / 6) * k1 + ( 1 / 4                   ) * k2 ), state)
             return np.concatenate((F1,F2))
-        k = eqsolve(F, G0, EQsolver)
-        k1 = k[:dSl]
-        k2 = k[dSl:]
-        return dState + DeltaTime / 2 * ( k1 + k2 )
+        k = eqsolve(F, g0, eq_solver)
+        k1 = k[:dsl]
+        k2 = k[dsl:]
+        return d_state + delta_time / 2 * ( k1 + k2 )
     
-    if ODEsolver == "Gauss Legendre Runge Kutta 6":
-        G0 = np.concatenate((G0,G0,G0))
+    if ode_solver == "Gauss Legendre Runge Kutta 6":
+        g0 = np.concatenate((g0,g0,g0))
         def F(k):
-            k1 = k[:dSl]
-            k2 = k[dSl:2*dSl]
-            k3 = k[2*dSl:]
+            k1 = k[:dsl]
+            k2 = k[dsl:2*dsl]
+            k3 = k[2*dsl:]
             
-            F1 = k1 - df(t + ( 1 / 2 - ( 15 ** 0.5 ) / 10 ) * DeltaTime, dState + DeltaTime * ( ( 5 / 36                      ) * k1 + ( 2 / 9 - ( 15 ** 0.5 ) / 15 ) * k2 + ( 5 / 36 - ( 15 ** 0.5 ) / 30 ) * k3 ), State)
-            F2 = k2 - df(t + ( 1 / 2                      ) * DeltaTime, dState + DeltaTime * ( ( 5 / 36 - ( 15 ** 0.5 ) / 24 ) * k1 + ( 2 / 9                      ) * k2 + ( 5 / 36 - ( 15 ** 0.5 ) / 24 ) * k3 ), State)
-            F3 = k3 - df(t + ( 1 / 2 + ( 15 ** 0.5 ) / 10 ) * DeltaTime, dState + DeltaTime * ( ( 5 / 36 + ( 15 ** 0.5 ) / 30 ) * k1 + ( 2 / 9 + ( 15 ** 0.5 ) / 15 ) * k2 + ( 5 / 36                      ) * k3 ), State)
+            F1 = k1 - df(t + ( 1 / 2 - ( 15 ** 0.5 ) / 10 ) * delta_time, d_state + delta_time * ( ( 5 / 36                      ) * k1 + ( 2 / 9 - ( 15 ** 0.5 ) / 15 ) * k2 + ( 5 / 36 - ( 15 ** 0.5 ) / 30 ) * k3 ), state)
+            F2 = k2 - df(t + ( 1 / 2                      ) * delta_time, d_state + delta_time * ( ( 5 / 36 - ( 15 ** 0.5 ) / 24 ) * k1 + ( 2 / 9                      ) * k2 + ( 5 / 36 - ( 15 ** 0.5 ) / 24 ) * k3 ), state)
+            F3 = k3 - df(t + ( 1 / 2 + ( 15 ** 0.5 ) / 10 ) * delta_time, d_state + delta_time * ( ( 5 / 36 + ( 15 ** 0.5 ) / 30 ) * k1 + ( 2 / 9 + ( 15 ** 0.5 ) / 15 ) * k2 + ( 5 / 36                      ) * k3 ), state)
             
             return np.concatenate((F1,F2,F3))
-        k = eqsolve(F, G0, EQsolver)
+        k = eqsolve(F, g0, eq_solver)
         
-        k1 = k[:dSl]
-        k2 = k[dSl:2*dSl]
-        k3 = k[2*dSl:]
+        k1 = k[:dsl]
+        k2 = k[dsl:2*dsl]
+        k3 = k[2*dsl:]
         
-        return dState + DeltaTime * ( 5 / 18 * k1 + 4 / 9 * k2 + 5 / 18 * k3 )
+        return d_state + delta_time * ( 5 / 18 * k1 + 4 / 9 * k2 + 5 / 18 * k3 )
 
 def integrate(f, a, b, s): # \int_{a}^{b}f(x)dx
     dx = ( b - a ) / s
@@ -206,9 +206,9 @@ def readfile(name):
     with open(name) as f: tmp = f.read()
     return tmp
 
-def thermrad(A, emiss, T, T_amb):
+def thermrad(a, emiss, t, t_amb):
     sigma = 5.670374419e-8
-    return A * emiss * sigma * ( ( T + 273.15 ) ** 4 - ( T_amb + 273.15 ) ** 4 )
+    return a * emiss * sigma * ( ( t + 273.15 ) ** 4 - ( t_amb + 273.15 ) ** 4 )
 
 def clock(t, type, hi=1, lo=-1, f=1, duty=0.5, phase=0):
     if type == "square" or type == "sq":
@@ -226,89 +226,92 @@ def clock(t, type, hi=1, lo=-1, f=1, duty=0.5, phase=0):
     else:
         return 0
 
-def save_file(Save_Data, Save_Format, Save_Filename, D):
-    if Save_Format == ".npz" and Save_Data == True:
-        np.savez(f"{Save_Filename}.npz", D)
-    if Save_Format == ".txt" and Save_Data == True:
-        np.savetxt(f"{Save_Filename}.txt", D)
-    if Save_Format == ".csv" and Save_Data == True:
-        np.savetxt(f"{Save_Filename}.csv", D, delimiter=",")
+def save_file(save_data, save_format, save_filename, d):
+    if save_format == ".npz" and save_data:
+        np.savez(f"{save_filename}.npz", d)
+    if save_format == ".txt" and save_data:
+        np.savetxt(f"{save_filename}.txt", d)
+    if save_format == ".csv" and save_data:
+        np.savetxt(f"{save_filename}.csv", d, delimiter=",")
 
 def no_f(t, x, s):
     return s
 
-def set_const(SuppHash, sim_name="sim.py", config_name="config.ini"):
+def set_const(supp_hash, sim_name="sim.py", config_name="config.ini"):
     config = readfile(f"{config_name}")
-    FC = f"\n\n#{sim_name}: \n\n" + readfile(f"{sim_name}").replace(SuppHash, "") + "\n\n#sim_API.py: \n\n" + readfile("sim_API.py") + f"\n\n#{config_name}: \n\n" + config
-    FileHash = SHA256(FC)
-    StartTime = time.perf_counter()
-    return config, FC, FileHash, StartTime
+    fc = f"\n\n#{sim_name}: \n\n" + readfile(f"{sim_name}").replace(supp_hash, "") + "\n\n#sim_API.py: \n\n" + readfile("sim_API.py") + f"\n\n#{config_name}: \n\n" + config
+    file_hash = SHA256(fc)
+    start_time = time.perf_counter()
+    return config, fc, file_hash, start_time
 
 #main simulation functions:
 
-def run_sim(DeltaTime, State, dState, Timeframe, Burntime, f, df, ODEsolver, EQsolver, Show_bar = True, Enable_UI = True):
+def run_sim(delta_time, state, d_state, time_frame, burntime, f, df, ode_solver, eq_solver, show_bar = True, enable_ui = True):
     
-    if Enable_UI == True:
+    if enable_ui:
         print("0/1 Complete.")
     
-    ODEsolver = norm_solver_name(ODEsolver)
+    ode_solver = norm_solver_name(ode_solver)
     
-    steps = int(( Timeframe )/DeltaTime)
-    burnsteps =  int( Burntime / DeltaTime)
+    steps = int(( time_frame )/delta_time)
+    burnsteps =  int( burntime / delta_time)
     
-    Time = 0
+    time = 0
     
-    TIME = np.linspace(Burntime, Burntime + Timeframe, steps)
-    Rec = np.zeros( (len(State) + len(dState) + 1, steps), dtype = np.float64)
+    rec = np.zeros( (len(state) + len(d_state) + 1, steps), dtype = np.float64)
     
     t_arr = np.array([0])
     
     progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
     
     for x1 in range( steps + burnsteps ):
-        Time += DeltaTime #keeping time
+        time += delta_time #keeping time
         #--- stuff VVV
-        State = f(Time, dState, State)
-        dState = step(df, Time, dState, State, ODEsolver, DeltaTime, EQsolver)
+        state = f(time, d_state, state)
+        d_state = step(df, time, d_state, state, ode_solver, delta_time, eq_solver)
         
         if x1 >= burnsteps: #recording data
-            t_arr[0] = Time
-            Sim_State = np.concatenate( (State, dState, t_arr) )
-            Rec[:, x1 - burnsteps] = Sim_State
-        if x1 % progress_bar_update_time == 0 and Show_bar == True:
+            t_arr[0] = time
+            sim_state = np.concatenate( (state, d_state, t_arr) )
+            rec[:, x1 - burnsteps] = sim_state
+        if x1 % progress_bar_update_time == 0 and show_bar:
             progress(100 * ( x1 + 1 ) / ( steps + burnsteps))
     
-    if Enable_UI == True:
+    if enable_ui:
         lb()
         print("1/1 Complete.")
         print("Please wait. . .")
-    return Rec
+    return rec
 
-def plot(plot_type, d, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False ):
+def plot(plot_type, d, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False, show_plot=True, ui=True ):
     if plot_type == "Graph":
+        
         w = np.array(np.shape(d))
-        w = int(w[0] - 1)
-        print(w)
+        
         fig, ax = plt.subplots(layout='constrained')
-        for plot_num in range(w):
-            x, y = d[ w - 1, : ], d[ w, : ]
-            ax.plot(x, y, label=datalab[int( plot_num / 2 - 1 )])
+        
+        for m in range( int( w[0] / 2 ) ):
+            x, y = d[ 2 * m - 2, : ], d[ 2 * m - 1, : ]
+            ax.plot(x, y, label=datalab[int( m - 1 )])
         
         ax.set(xlabel=xlab, ylabel=ylab,
             title=dlab)
+            
         if logy:
             ax.set_yscale("log")
+        
         plt.tick_params(axis="both", which="both")
         ax.grid()
 
         fig.savefig("test.png")
-        print("Done.")
-        plt.show()
+        if ui: print("Done.")
+        if show_plot:
+            plt.show()
 
     elif plot_type == "Animation":
         imp()
     
-    input("The end of the programm was reached. Press enter to exit.")
+    if ui: input("The end of the programm was reached. Press enter to exit.")
 
 #UI functions:
 
@@ -354,44 +357,44 @@ def console(scope):
             print("Invalid command!")
             lb()
 
-def UI(Enable_console, Confirm_num_len, scope):
+def UI(scope, enable_console=False, confirm_num_len=8):
     lb()
     print("Done.")
     lb()
-    INP = "Y"
+    inp = "Y"
     
-    Timeframe, DeltaTime, Burntime = scope["Timeframe"], scope["DeltaTime"], scope["Burntime"]
-    steps, burnsteps = int( Timeframe / DeltaTime ), int( Burntime  / DeltaTime )
+    timeframe, delta_time, burntime = scope["timeframe"], scope["delta_time"], scope["burntime"]
+    steps, burnsteps = int( timeframe / delta_time ), int( burntime  / delta_time )
     
     imp_s = ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"]
     
     while True:
-        INP = input(f"Confirm simulating {int( (Timeframe + Burntime) / DeltaTime )} samples? [Y]/[N]/[i]").casefold().strip()
-        if INP in [ "y", "n" ]:
+        inp = input(f"Confirm simulating {int( (timeframe + burntime) / delta_time )} samples? [Y]/[N]/[i]").casefold().strip()
+        if inp in [ "y", "n" ]:
             break
-        if INP == "i":
-            ODEsolver, EQsolver = norm_solver_name(scope["ODEsolver"]), scope["EQsolver"]
-            Timeframe, DeltaTime, Burntime = scope["Timeframe"], scope["DeltaTime"], scope["Burntime"]
-            Save_Data, Save_Format, Save_Filename = scope["Save_Data"], scope["Save_Format"], scope["Save_Filename"]
-            SuppHash, FileHash = scope["SuppHash"], scope["FileHash"]
-            steps, burnsteps = int( Timeframe / DeltaTime ), int( Burntime  / DeltaTime )
+        if inp == "i":
+            ode_solver, eq_solver = norm_solver_name(scope["ode_solver"]), scope["eq_solver"]
+            timeframe, delta_time, burntime = scope["timeframe"], scope["delta_time"], scope["burntime"]
+            save_data, save_format, save_filename = scope["save_data"], scope["save_format"], scope["save_filename"]
+            supp_hash, file_hash = scope["supp_hash"], scope["file_hash"]
+            steps, burnsteps = int( timeframe / delta_time ), int( burntime  / delta_time )
             info = f"""
 
-The Timestep in the simulation is set to {DeltaTime} seconds.
-Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({Burntime} seconds), {steps} samples will be recorded ({Timeframe} seconds).
-Using {ODEsolver}{ f" with {EQsolver}" if ODEsolver in imp_s else "" }.
-The resulting data will {"" if Save_Data == True else "not"}be saved to disk {f" in a {Save_Format} file named {Save_Filename}{Save_Format}" if Save_Data == True else ""}.
-The SHA256 of the current file is                {FileHash} .
-The SHA256 of the current file is supposed to be {SuppHash} .
-{"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash." if FileHash != SuppHash else ""}
+The Timestep in the simulation is set to {delta_time} seconds.
+Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({burntime} seconds), {steps} samples will be recorded ({timeframe} seconds).
+Using {ode_solver}{ f" with {eq_solver}" if ode_solver in imp_s else ""}.
+The resulting data will {"" if save_data else "not "}be saved to disk{f" in a {save_format} file named {save_filename}{save_format}" if save_data else ""}.
+The SHA256 of the current file is                {file_hash} .
+The SHA256 of the current file is supposed to be {supp_hash} .
+{"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash." if file_hash != supp_hash else ""}
 """
             print(info)
-        elif ( INP == "console" or INP == "con" ) and Enable_console == True:
-            RNGVAR = rngstr(Confirm_num_len)
+        elif ( inp == "console" or inp == "con" ) and enable_console:
+            rng_var = rngstr(confirm_num_len)
             lb()
             print("Warning: usage of this function may break the softwear!")
-            cinp = input(f"To confirm entering the console please enter the following key: \n{RNGVAR} \n")
-            if cinp == RNGVAR:
+            cinp = input(f"To confirm entering the console please enter the following key: \n{rng_var} \n")
+            if cinp == rng_var:
                 lb()
                 print("Console:") # The console is so restrictive, that its safe
                 lb()
@@ -401,12 +404,12 @@ The SHA256 of the current file is supposed to be {SuppHash} .
                 print("Incorrect numer!")
                 lb()
                 pass
-        elif INP == "" :
+        elif inp == "" :
             pass
         else:
             print("Wrong input, please try again.")
 
-    if INP == "y":
+    if inp == "y":
         pass
     else: 
         exit()
