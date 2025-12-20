@@ -246,7 +246,7 @@ def set_const(supp_hash, sim_name="sim.py", config_name="config.ini"):
 
 #main simulation functions:
 
-def run_sim(delta_time, state, d_state, time_frame, burntime, f, df, ode_solver, eq_solver, show_bar = True, enable_ui = True):
+def run_sim(delta_time, state, d_state, time_frame, burntime, f, df, ode_solver, eq_solver="fS", show_bar = True, enable_ui = True):
     
     if enable_ui:
         print("0/1 Complete.")
@@ -274,7 +274,7 @@ def run_sim(delta_time, state, d_state, time_frame, burntime, f, df, ode_solver,
             t_arr[0] = time
             sim_state = np.concatenate( (state, d_state, t_arr) )
             rec[:, x1 - burnsteps] = sim_state
-        if x1 % progress_bar_update_time == 0 and show_bar:
+        if x1 % progress_bar_update_time == 0 and show_bar and enable_ui:
             progress(100 * ( x1 + 1 ) / ( steps + burnsteps))
     
     if enable_ui:
@@ -283,7 +283,7 @@ def run_sim(delta_time, state, d_state, time_frame, burntime, f, df, ode_solver,
         print("Please wait. . .")
     return rec
 
-def plot(plot_type, d, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False, show_plot=True, ui=True ):
+def plot(plot_type, d, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False, show_plot=True, ui=True, save_plot=False, save_plot_name="test.png" ):
     if plot_type == "Graph":
         
         w = np.array(np.shape(d))
@@ -292,21 +292,20 @@ def plot(plot_type, d, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram",
         
         for m in range( int( w[0] / 2 ) ):
             x, y = d[ 2 * m - 2, : ], d[ 2 * m - 1, : ]
-            ax.plot(x, y, label=datalab[int( m - 1 )])
+            ax.plot(x, y, label=datalab[int( m - 1 ) % len( datalab ) ])
         
         ax.set(xlabel=xlab, ylabel=ylab,
             title=dlab)
             
-        if logy:
-            ax.set_yscale("log")
-        
+        if logy: ax.set_yscale("log")
+         
         plt.tick_params(axis="both", which="both")
         ax.grid()
+        ax.legend()
 
-        fig.savefig("test.png")
+        if save_plot: fig.savefig(save_plot_name)
         if ui: print("Done.")
-        if show_plot:
-            plt.show()
+        if show_plot: plt.show()
 
     elif plot_type == "Animation":
         imp()
@@ -319,7 +318,7 @@ def console(scope):
     while True:
         cinp = input(">>> ").casefold().strip()
         lb()
-        if cinp == "exit":
+        if   cinp == "exit":
             print("Exited console.")
             lb()
             break
@@ -329,7 +328,7 @@ def console(scope):
             lb()
             val = clean(val)
             var = clean(var)
-            scope[var] = val
+            scope[var] = float(val)
             print(f"Set {var} to {val}.")
             lb()
         elif cinp == "inspect" or cinp == "ins":
@@ -353,32 +352,20 @@ def console(scope):
             lb()
             print("Help menu:")
             print("Available commands: set, string set, ins, exit")
+        elif cinp == "kill":
+            exit()
         else:
             print("Invalid command!")
             lb()
 
-def UI(scope, enable_console=False, confirm_num_len=8):
-    lb()
-    print("Done.")
-    lb()
-    inp = "Y"
-    
-    timeframe, delta_time, burntime = scope["timeframe"], scope["delta_time"], scope["burntime"]
-    steps, burnsteps = int( timeframe / delta_time ), int( burntime  / delta_time )
-    
+def info(scope):
     imp_s = ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"]
-    
-    while True:
-        inp = input(f"Confirm simulating {int( (timeframe + burntime) / delta_time )} samples? [Y]/[N]/[i]").casefold().strip()
-        if inp in [ "y", "n" ]:
-            break
-        if inp == "i":
-            ode_solver, eq_solver = norm_solver_name(scope["ode_solver"]), scope["eq_solver"]
-            timeframe, delta_time, burntime = scope["timeframe"], scope["delta_time"], scope["burntime"]
-            save_data, save_format, save_filename = scope["save_data"], scope["save_format"], scope["save_filename"]
-            supp_hash, file_hash = scope["supp_hash"], scope["file_hash"]
-            steps, burnsteps = int( timeframe / delta_time ), int( burntime  / delta_time )
-            info = f"""
+    ode_solver, eq_solver = norm_solver_name(scope["ode_solver"]), scope["eq_solver"]
+    timeframe, delta_time, burntime = scope["timeframe"], scope["delta_time"], scope["burntime"]
+    save_data, save_format, save_filename = scope["save_data"], scope["save_format"], scope["save_filename"]
+    supp_hash, file_hash = scope["supp_hash"], scope["file_hash"]
+    steps, burnsteps = int( timeframe / delta_time ), int( burntime  / delta_time )
+    info = f"""
 
 The Timestep in the simulation is set to {delta_time} seconds.
 Simulating {steps + burnsteps} samples. {burnsteps} samples will be discarded ({burntime} seconds), {steps} samples will be recorded ({timeframe} seconds).
@@ -388,31 +375,24 @@ The SHA256 of the current file is                {file_hash} .
 The SHA256 of the current file is supposed to be {supp_hash} .
 {"The current hash does NOT match the supposed hash. This indicates that the file has been modified since the last update of the supposed hash." if file_hash != supp_hash else ""}
 """
-            print(info)
-        elif ( inp == "console" or inp == "con" ) and enable_console:
-            rng_var = rngstr(confirm_num_len)
-            lb()
-            print("Warning: usage of this function may break the softwear!")
-            cinp = input(f"To confirm entering the console please enter the following key: \n{rng_var} \n")
-            if cinp == rng_var:
-                lb()
-                print("Console:") # The console is so restrictive, that its safe
-                lb()
-                console(scope)
-            else:
-                lb()
-                print("Incorrect numer!")
-                lb()
-                pass
-        elif inp == "" :
-            pass
-        else:
-            print("Wrong input, please try again.")
+    print(info)
 
-    if inp == "y":
-        pass
-    else: 
-        exit()
+def UI(scope, enable_console=False, confirm_num_len=8):
+    print("\nDone.\n")
+    while True:
+        s = int( ( scope["burntime"] + scope["timeframe"] ) / scope["delta_time"] )
+        inp = input(f"Confirm simulating {s} samples? [Y]/[N]/[i]").casefold().strip()
+        rng_var = rngstr(confirm_num_len)
+        
+        if   inp == "i": info(scope)
+        elif inp == "y": break
+        elif inp == "n": exit()
+        elif ( inp == "console" or inp == "con" ) and enable_console:
+            if input(f"\nWarning: usage of this function may break the softwear!\nTo confirm entering the console please enter the following key: \n{rng_var} \n") == rng_var:
+                print("\nConsole:\n") # The console is so restrictive, that its safe
+                console(scope)
+            else: print("\nIncorrect numer!\n")
+        elif inp !=  "": print("Wrong input, please try again.")
 
 #Notes:
 """
