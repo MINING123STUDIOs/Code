@@ -54,21 +54,21 @@ def s_deriv(f, w, eps=1e-8): #\frac{d^2f}{dx^2}|x=w
     return ( f( w + eps) 2 * f( w ) + f( w - eps) ) / eps ** 2
 
 def sign(x):
-    if x > 0: w = +1
-    if x < 0: w = -1
-    else    : w = 0
+    if   x > 0: w = +1
+    elif x < 0: w = -1
+    else      : w = 0
     return w
 
 def step(x, z=0.5):
-    if x > 0: w = 1
-    if x < 0: w = 0
-    else    : w = z
+    if   x > 0: w = 1
+    elif x < 0: w = 0
+    else      : w = z
     return w
 
 def clamp(x, hi, lo):
-    if x > hi: w = hi
-    if lo < 0: w = lo
-    else     : w = x
+    if   x > hi: w = hi
+    elif lo < 0: w = lo
+    else       : w = x
     return w
 
 #Notes:
