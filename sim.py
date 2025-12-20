@@ -16,7 +16,6 @@ save_data        = False
 save_format      = ".csv" 
 save_filename    = "Recording"
 enable_console   = True
-confirm_num_len  = 8
 plot_type        = "Graph"
 supp_hash        = "fceb32a7a49ab54130b70bffbf89880c99dcaa31d8ee1334e090fbfa3d0ee383"
 
@@ -46,7 +45,7 @@ def df(t, x, s):
     dx[0], dx[1], dx[2], dx[3] = dtheta1, dtheta2, dw1, dw2
     return dx 
 
-UI(scope, enable_console, confirm_num_len)
+UI(scope, enable_console)
 
 rec = run_sim(delta_time, state, d_state, timeframe, burntime, no_f, df, ode_solver, eq_solver, False)
 
@@ -58,4 +57,4 @@ x, y = + l1 * np.sin(theta1) + l2 * np.sin(theta2), - l1 * np.cos(theta1) - l2 *
 #plotting & saving data
 save_file(save_data, save_format, save_filename, np.array([x,y]))
 
-plot(plot_type, np.array([x,y]), ["a","b"])
+plot(plot_type, np.array([x,y]), ["a"])
