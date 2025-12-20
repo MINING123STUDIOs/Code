@@ -38,9 +38,38 @@ def pi_prod(f, a, b): #\prod_{n=a}^{b}f(n)
         c = c * f(n)
     return c
 
+def scalar_solve(F, x0, tol=1e-9, max_iter=20):
+    x = x0
+    eps = 1e-8
+    for i in range(max_iter):
+        x = x - eps * F(x) / ( F( x + eps ) - F( x ) )
+        if abs(F(x)) < tol:
+            return x
+    return x
 
+def deriv(f, w, eps=1e-8): #\frac{df}{dx}|x=w
+    return ( f( w + eps / 2 ) - f( w - eps / 2 ) ) / eps
 
+def s_deriv(f, w, eps=1e-8): #\frac{d^2f}{dx^2}|x=w
+    return ( f( w + eps) 2 * f( w ) + f( w - eps) ) / eps ** 2
 
+def sign(x):
+    if x > 0: w = +1
+    if x < 0: w = -1
+    else    : w = 0
+    return w
+
+def step(x, z=0.5):
+    if x > 0: w = 1
+    if x < 0: w = 0
+    else    : w = z
+    return w
+
+def clamp(x, hi, lo):
+    if x > hi: w = hi
+    if lo < 0: w = lo
+    else     : w = x
+    return w
 
 #Notes:
 """
