@@ -1,7 +1,6 @@
 """
 Contents:
     imports
-    misl. crypto utility functions
     string & print functions
     numerical analysis functions
     misl. helper functions
@@ -19,40 +18,13 @@ import random as rng
 import string
 import sys
 import time
-import hashlib
-from cryptography.fernet import Fernet
-
-#misl. crypto utility functions:
-
-def c_encrypt(key, massage):
-    f = Fernet(key)
-    return f.encrypt(massage.encode("utf-8"))
-    
-def c_decrypt(key, digest):
-    f = Fernet(key)
-    return f.decrypt(digest).decode("utf-8")
-
-def MD5(strg):
-    return hashlib.md5(strg.encode("utf8")).hexdigest()
-
-def SHA256(strg):
-    return hashlib.sha256(strg.encode("utf8")).hexdigest()
+from            math_API import *
+from         special_API import *
 
 #string & print functions:
 
 def imp():
     print("This feature will be implemented soon.")
-
-def clean(text):
-    allowed = string.ascii_letters + string.digits + "_-."
-    return "" if ( not all ( ch in allowed for ch in text ) ) or text.startswith("__") else text
-
-def rngstr(length):
-    chars = string.ascii_letters * 2 + string.digits + "+-*/=()!%&?#_;:.,$"
-    return "".join( rng.choice( chars ) for _ in range( length ) )
-
-def norm_solver_name(name): 
-    return name.replace("eE", "explicit_Euler").replace("iE", "implicit_Euler").replace("GLRK", "Gauss_Legendre_Runge_Kutta_").replace("RK", "Runge_Kutta_").replace("_", " ")
 
 def lb():
     print("")
@@ -83,15 +55,6 @@ def newton_solve(F, x0, tol=1e-9, max_iter=20):
         delta = np.linalg.solve(J, -Fx)
         x += delta
         if np.linalg.norm(delta, ord=2) < tol:
-            return x
-    return x
-
-def scalar_solve(F, x0, tol=1e-9, max_iter=20):
-    x = x0
-    eps = 1e-8
-    for i in range(max_iter):
-        x = x - eps * F(x) / ( F( x + eps ) - F( x ) )
-        if abs(F(x)) < tol:
             return x
     return x
 
@@ -176,55 +139,7 @@ def step(df, t, d_state, state, ode_solver, delta_time, eq_solver):
         
         return d_state + delta_time * ( 5 / 18 * k1 + 4 / 9 * k2 + 5 / 18 * k3 )
 
-def integrate(f, a, b, s): # \int_{a}^{b}f(x)dx
-    dx = ( b - a ) / s
-    x = a
-    c = 0
-    fc = f( a )
-    fn = f( a + dx )
-    for _ in range(s):
-        c += dx * 0.5 * ( fc + fn )
-        x += dx
-        fc = fn
-        if _ < s - 1:
-            fn = f( x + dx )
-    return c
-
 #misl. helper functions:
-
-def safeexp(x):
-     return np.exp(np.clip(x, a_max=700, a_min=-750))
-
-def linint(hi, lo, s):
-    if s < 0.0:
-        s = 0.0
-    elif s > 1.0:
-        s = 1.0
-    return hi * s + lo * ( 1 - s )
-
-def readfile(name):
-    with open(name) as f: tmp = f.read()
-    return tmp
-
-def thermrad(a, emiss, t, t_amb):
-    sigma = 5.670374419e-8
-    return a * emiss * sigma * ( ( t + 273.15 ) ** 4 - ( t_amb + 273.15 ) ** 4 )
-
-def clock(t, type, hi=1, lo=-1, f=1, duty=0.5, phase=0):
-    if type == "square" or type == "sq":
-        return hi if ( ( f * t + phase ) % 1 ) > duty else lo
-    if type == "sine" or type == "sn":
-        return linint( hi, lo, 0.5 + 0.5 * np.sin( 2 * np.pi * ( f * t + phase ) ) )
-    if type == "triangle" or type == "tg":
-        return linint( hi, lo, 2 * np.abs( ( f * t + phase ) % 1 - 0.5 ) )
-    if type == "saw" or type == "sw":
-        return linint( hi, lo, ( f * t + phase ) % 1 )
-    if type == "white_noise" or type == "wn":
-        return linint( hi, lo, rng.random() )
-    if type == "0":
-        return linint( hi, lo, 0 )
-    else:
-        return 0
 
 def save_file(save_data, save_format, save_filename, d):
     if save_format == ".npz" and save_data:
@@ -239,7 +154,7 @@ def no_f(t, x, s):
 
 def set_const(supp_hash, sim_name="sim.py", config_name="config.ini"):
     config = readfile(f"{config_name}")
-    fc = f"\n\n#{sim_name}: \n\n" + readfile(f"{sim_name}").replace(supp_hash, "") + "\n\n#sim_API.py: \n\n" + readfile("sim_API.py") + f"\n\n#{config_name}: \n\n" + config
+    fc = f"\n\n#{sim_name}: \n\n" + readfile(f"{sim_name}").replace(supp_hash, "") + f"\n\n#{config_name}: \n\n" + config
     file_hash = SHA256(fc)
     start_time = time.perf_counter()
     return config, fc, file_hash, start_time
