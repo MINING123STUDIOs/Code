@@ -1,14 +1,10 @@
 """
 Contents:
-    imports
     function
     Notes
 """
 
-#imports:
-#import numpy as np
-#import scipy as sci
-#import scipy.optimize as op
+math import perm as nPr, comb as nCr
 
 #functions:
 
@@ -51,7 +47,7 @@ def deriv(f, w, eps=1e-8): #\frac{df}{dx}|x=w
     return ( f( w + eps / 2 ) - f( w - eps / 2 ) ) / eps
 
 def s_deriv(f, w, eps=1e-8): #\frac{d^2f}{dx^2}|x=w
-    return ( f( w + eps) 2 * f( w ) + f( w - eps) ) / eps ** 2
+    return ( f( w + eps) - 2 * f( w ) + f( w - eps) ) / eps ** 2
 
 def sign(x):
     if   x > 0: w = +1
@@ -59,7 +55,7 @@ def sign(x):
     else      : w = 0
     return w
 
-def step(x, z=0.5):
+def hstep(x, z=0.5):
     if   x > 0: w = 1
     elif x < 0: w = 0
     else      : w = z
@@ -67,9 +63,31 @@ def step(x, z=0.5):
 
 def clamp(x, hi, lo):
     if   x > hi: w = hi
-    elif lo < 0: w = lo
+    elif x < lo: w = lo
     else       : w = x
     return w
+
+def linint(hi, lo, s):
+    if s < 0.0:
+        s = 0.0
+    elif s > 1.0:
+        s = 1.0
+    return hi * s + lo * ( 1 - s )
+"""
+def is_prime(x):
+    if x % 1 > 0: return False
+    
+    else: return 
+"""
+
+
+
+
+
+
+
+
+
 
 #Notes:
 """
