@@ -2,7 +2,9 @@ print("Setting up simulation. . .")
 # This is a universal ODE simulation framework.
 #importing libs.
 import numpy as np
-from sim_API import *
+from     sim_API import *
+from    math_API import *
+from special_API import *
 
 scope = globals()
 
@@ -25,25 +27,10 @@ m1, m2, l1, l2 = 1, 1, 1, 1 #current example: double pendulum
 g = 9.81
 
 #working variables
-d_state = np.array( [0.2, 0, 0, 0], dtype = np.float64 ) # (Theta1, Theta2, w1, w2) state depending on ODEs 
-state = np.array( [0], dtype = np.float64 ) # (Rec) state not depending on ODEs 
+d_state = np.array( [0.2, 0, 0, 0] ) # (Theta1, Theta2, w1, w2) state depending on ODEs 
+state = np.array( [0] ) #state not depending on ODEs 
 
-def df(t, x, s):
-    theta1, theta2, w1, w2 = x[0], x[1], x[2], x[3]
-    
-    delta = theta1 - theta2
-    
-    dtheta1 = w1
-    dtheta2 = w2
-    
-    Div = ( 2 * m1 + m2 - m2 * np.cos( 2 * delta ) )
-    
-    dw1 = ( - g * ( 2 * m2 + m1 ) * np.sin( theta1 ) - m2 * g * np.sin( theta1 - 2 * theta2 ) - 2 * np.sin( delta ) * m2 * ( w2 ** 2 * l2 + w1 ** 2 * l1 * np.cos( delta ) ) ) / ( l1 * Div )
-    dw2 = ( 2 * np.sin( delta ) * ( w1 ** 2 * l1 * ( m1 + m2 ) + g * ( m1 + m2 ) * np.cos( theta1 ) + w2 ** 2 * l2 * m2 * np.cos( delta ) ) ) / ( l2 * Div )
-    
-    dx = np.zeros_like(x)
-    dx[0], dx[1], dx[2], dx[3] = dtheta1, dtheta2, dw1, dw2
-    return dx 
+def df(t, x, s): return double_pendulum_ode(t, x, s, m1, m2, l1, l2, g)    
 
 UI(scope, enable_console)
 
@@ -56,5 +43,5 @@ x, y = + l1 * np.sin(theta1) + l2 * np.sin(theta2), - l1 * np.cos(theta1) - l2 *
 
 #plotting & saving data
 save_file(save_data, save_format, save_filename, np.array([x,y]))
-
+crash()
 plot(plot_type, np.array([x,y]), ["a"])
