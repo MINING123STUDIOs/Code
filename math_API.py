@@ -4,7 +4,7 @@ Contents:
     Notes
 """
 
-math import perm as nPr, comb as nCr
+from math import perm as nPr, comb as nCr
 
 #functions:
 
@@ -25,7 +25,7 @@ def integrate(f, a, b, s): # \int_{a}^{b}f(x)dx
 def sigma_sum(f, a, b): #\sum_{n=a}^{b}f(n)
     c = 0
     for n in range(a,b+1):
-        c += f(n)
+        c = c + f(n)
     return c
 
 def pi_prod(f, a, b): #\prod_{n=a}^{b}f(n)
@@ -73,21 +73,6 @@ def linint(hi, lo, s):
     elif s > 1.0:
         s = 1.0
     return hi * s + lo * ( 1 - s )
-"""
-def is_prime(x):
-    if x % 1 > 0: return False
-    
-    else: return 
-"""
-
-
-
-
-
-
-
-
-
 
 #Notes:
 """
