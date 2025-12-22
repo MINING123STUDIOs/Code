@@ -21,7 +21,7 @@ enable_console   = True
 plot_type        = "Graph"
 supp_hash        = "fceb32a7a49ab54130b70bffbf89880c99dcaa31d8ee1334e090fbfa3d0ee383"
 
-config, fc, file_hash, start_time = set_const(supp_hash)
+set_const(scope)
 #---
 m1, m2, l1, l2 = 1, 1, 1, 1 #current example: double pendulum
 g = 9.81
@@ -43,5 +43,5 @@ x, y = + l1 * np.sin(theta1) + l2 * np.sin(theta2), - l1 * np.cos(theta1) - l2 *
 
 #plotting & saving data
 save_file(save_data, save_format, save_filename, np.array([x,y]))
-crash()
+
 plot(plot_type, np.array([x,y]), ["a"])
