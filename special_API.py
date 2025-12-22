@@ -10,6 +10,7 @@ import numpy as np
 import scipy.optimize as op
 import random as rng
 import hashlib
+import string
 from cryptography.fernet import Fernet
 from math_API import *
 
@@ -82,19 +83,19 @@ def double_pendulum_ode(t, x, s, m1, m2, l1, l2, g):
     dx[0], dx[1], dx[2], dx[3] = dtheta1, dtheta2, dw1, dw2
     return dx 
 
-def crash():
-    try:
-        crash()
-    except:
-        crash()
+def dielectric_breakdown(u, i_brk, u_brk, u_beta ):
+    return ( i_brk / u_beta ** u_brk ) * ( u_beta ** ( u ) - u_beta ** ( - u ) )
 
+def square(x):
+    return np.sign( np.sin( np.pi * x ) )
+
+def fractal_1(x, depth=15):
+    c = 0
+    for n in range( 0, depth + 1 ):
+        c = c + square(x * 3 ** n) / 3 ** n
+    return c
 
 #Notes:
 """
-    Recommended Project configuration:
-    Project (Folder)
-    │
-    ├──sim.py
-    ├──sim_API.py
-    └──config.ini
+    none.
 """
