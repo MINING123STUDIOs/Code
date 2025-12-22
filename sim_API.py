@@ -15,7 +15,6 @@ import numpy as np
 import scipy as sci
 import scipy.optimize as op
 import random as rng
-import string
 import sys
 import time
 from            math_API import *
@@ -152,12 +151,12 @@ def save_file(save_data, save_format, save_filename, d):
 def no_f(t, x, s):
     return s
 
-def set_const(supp_hash, sim_name="sim.py", config_name="config.ini"):
+def set_const(scope, sim_name="sim.py", config_name="config.ini"):
     config = readfile(f"{config_name}")
-    fc = f"\n\n#{sim_name}: \n\n" + readfile(f"{sim_name}").replace(supp_hash, "") + f"\n\n#{config_name}: \n\n" + config
+    fc = f"\n\n#{sim_name}: \n\n" + readfile(f"{sim_name}").replace(scope["supp_hash"], "") + f"\n\n#{config_name}: \n\n" + config
     file_hash = SHA256(fc)
     start_time = time.perf_counter()
-    return config, fc, file_hash, start_time
+    scope["config"], scope["fc"], scope["file_hash"], scope["start_time"] = config, fc, file_hash, start_time
 
 #main simulation functions:
 
@@ -227,6 +226,25 @@ def plot(plot_type, d, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram",
     
     if ui: input("The end of the programm was reached. Press enter to exit.")
 
+def fplot( x, f, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False, show_plot=True, ui=True, save_plot=False, save_plot_name="test.png" ):
+    
+    fig, ax = plt.subplots(layout='constrained')
+    x = np.linspace(x[0], x[1], x[2])
+    ax.plot(x, f(x), label=datalab)
+    
+    ax.set(xlabel=xlab, ylabel=ylab,
+        title=dlab)
+        
+    if logy: ax.set_yscale("log")
+     
+    plt.tick_params(axis="both", which="both")
+    ax.grid()
+    ax.legend()
+
+    if save_plot: fig.savefig(save_plot_name)
+    if ui: print("Done.")
+    if show_plot: plt.show()
+
 #UI functions:
 
 def console(scope):
@@ -294,7 +312,7 @@ The SHA256 of the current file is supposed to be {supp_hash} .
 
 def UI(scope, enable_console=False, confirm_num_len=8):
     print("\nDone.\n")
-    while True:
+    while True: 
         s = int( ( scope["burntime"] + scope["timeframe"] ) / scope["delta_time"] )
         inp = input(f"Confirm simulating {s} samples? [Y]/[N]/[i]").casefold().strip()
         rng_var = rngstr(confirm_num_len)
