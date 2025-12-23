@@ -33,6 +33,10 @@ def MD5(strg):
 def SHA256(strg):
     return hashlib.sha256(strg.encode("utf8")).hexdigest()
 
+def password_compare(input, hash, salt):
+    input_hash = SHA256(input + salt)
+    return input_hash == hash
+
 #helper functions:
 
 def readfile(name):
