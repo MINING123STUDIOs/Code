@@ -114,11 +114,12 @@ def fractal_1(x, depth=15):
     return c
 
 def c_random(x=33756):
-    t = time.perf_counter_ns()
-    strg = "hkND;EsT" + f"{x}" + f"{ t ^ ( t >> 12 ) }" + f"{t}"
+    t = ( time.perf_counter_ns() + 3445672145142512 ) % 2 ** 64
+    strg = "hkND;EsT" + f"{x}" + f"{ t ^ ( t >> 12 ) ^ ( ( t >> 13 ) % 2 ** 67 ) }" + f"{t}"
     return int(SHA256(strg),16) ^ int(SHA256(f"{t}"),16)
 
 #Notes:
 """
     none.
 """
+
