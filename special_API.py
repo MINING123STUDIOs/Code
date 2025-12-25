@@ -14,6 +14,7 @@ import scipy.optimize as op
 import random as rng
 import hashlib
 import string
+import time
 from cryptography.fernet import Fernet
 from math_API import *
 
@@ -32,10 +33,6 @@ def MD5(strg):
 
 def SHA256(strg):
     return hashlib.sha256(strg.encode("utf8")).hexdigest()
-
-def password_compare(input, hash, salt):
-    input_hash = SHA256(input + salt)
-    return input_hash == hash
 
 #helper functions:
 
@@ -115,6 +112,11 @@ def fractal_1(x, depth=15):
     for n in range( 0, depth + 1 ):
         c = c + square(x * 3 ** n) / 3 ** n
     return c
+
+def c_random(x=33756):
+    t = time.perf_counter_ns()
+    strg = "hkND;EsT" + f"{x}" + f"{ t ^ ( t >> 12 ) }" + f"{t}"
+    return int(SHA256(strg),16) ^ int(SHA256(f"{t}"),16)
 
 #Notes:
 """
