@@ -198,7 +198,7 @@ def run_sim(delta_time, state, d_state, time_frame, burntime, f, df, ode_solver,
     return rec
 
 def plot(plot_type, d, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False, show_plot=True, ui=True, save_plot=False, save_plot_name="test.png" ):
-    if plot_type == "Graph":
+    if plot_type in ["Graph", "G", "g"]:
         
         w = np.array(np.shape(d))
         
@@ -226,11 +226,16 @@ def plot(plot_type, d, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram",
     
     if ui: input("The end of the programm was reached. Press enter to exit.")
 
-def fplot( x, f, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False, show_plot=True, ui=True, save_plot=False, save_plot_name="test.png" ):
+def fplot( wx, f, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False, show_plot=True, ui=True, save_plot=False, save_plot_name="test.png" ):
     
     fig, ax = plt.subplots(layout='constrained')
-    x = np.linspace(x[0], x[1], x[2])
-    ax.plot(x, f(x), label=datalab)
+    x = np.linspace(wx[0], wx[1], wx[2])
+    y = np.zeros_like(x)
+    for bx in range(wx[2]):
+        y[bx] = f(x[bx])
+    
+    
+    ax.plot(x, y, label=datalab)
     
     ax.set(xlabel=xlab, ylabel=ylab,
         title=dlab)
@@ -251,45 +256,61 @@ def console(scope):
     while True:
         cinp = input(">>> ").casefold().strip()
         lb()
-        if   cinp == "exit":
-            print("Exited console.")
-            lb()
-            break
-        elif cinp == "set":
-            var = input("Enter the name of the variable you want to set: ")
-            val = input("Enter the value you want to set the variable to: ")
-            lb()
-            val = clean(val)
-            var = clean(var)
-            scope[var] = float(val)
-            print(f"Set {var} to {val}.")
-            lb()
-        elif cinp == "inspect" or cinp == "ins":
-            var = input("Enter the name of the variable you want to inspect: ")
-            lb()
-            if var in scope:
-                print(scope[var])
+        if cinp.startswith("/"):
+            cinp = cinp.replace("/", "")
+            if   cinp == "exit":
+                print("Exited console.")
+                lb()
+                break
+            elif cinp == "setfloat":
+                var = input("Enter the name of the variable you want to set: ")
+                val = input("Enter the value you want to set the variable to: ")
+                lb()
+                val = float(clean(val))
+                var = clean(var)
+                scope[var] = val
+                print(f"Set {var} to {val}.")
+                lb()
+            elif cinp == "setint":
+                var = input("Enter the name of the variable you want to set: ")
+                val = input("Enter the value you want to set the variable to: ")
+                lb()
+                val = int(clean(val))
+                var = clean(var)
+                scope[var] = val
+                print(f"Set {var} to {val}.")
+                lb()
+            elif cinp == "inspect" or cinp == "ins":
+                var = input("Enter the name of the variable you want to inspect: ")
+                lb()
+                if var in scope:
+                    print(scope[var])
+                else:
+                    print(f"No variable with the name \"{var}\" is defined.")
+                lb()
+            elif cinp == "stringset" or cinp == "strset":
+                var = input("Enter the name of the variable you want to set: ")
+                val = input("Enter the string you want to set the variable to: ")
+                lb()
+                val = clean(val)
+                var = clean(var)
+                scope[var] = f"{val}"
+                print(f"Set {var} to {val}.")
+                lb()
+            elif cinp == "help":
+                print("\nHelp menu:")
+                print("Available commands: set, string set, ins, exit")
+            elif cinp == "kill":
+                print("\n exiting program.")
+                time.sleep(1)
+                exit()
             else:
-                print(f"No variable with the name \"{var}\" is defined.")
-            lb()
-        elif cinp == "stringset" or cinp == "strset":
-            var = input("Enter the name of the variable you want to set: ")
-            val = input("Enter the string you want to set the variable to: ")
-            lb()
-            val = clean(val)
-            var = clean(var)
-            scope[var] = f"{val}"
-            print(f"Set {var} to {val}.")
-            lb()
-        elif cinp == "help":
-            lb()
-            print("Help menu:")
-            print("Available commands: set, string set, ins, exit")
-        elif cinp == "kill":
-            exit()
+                print("Invalid command!")
+                lb()
         else:
-            print("Invalid command!")
+            print(cinp)
             lb()
+            
 
 def info(scope):
     imp_s = ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"]
