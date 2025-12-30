@@ -4,8 +4,6 @@ Contents:
     Notes
 """
 
-from math import perm as nPr, comb as nCr
-
 #functions:
 
 def integrate(f, a, b, s): # \int_{a}^{b}f(x)dx
@@ -73,8 +71,14 @@ def linint(hi, lo, s):
     elif s > 1.0:
         s = 1.0
     return hi * s + lo * ( 1 - s )
+"""
+def is_prime(x):
+    if x % 1 > 0: return False
+    
+    else: return 
+"""
 
 #Notes:
 """
-    currently none
+    none.
 """
