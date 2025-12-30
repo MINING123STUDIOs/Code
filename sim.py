@@ -1,9 +1,8 @@
 print("Setting up simulation. . .") 
-# This is a universal ODE simulation framework.
+# This is a demonstration of the API.
 #importing libs.
 import numpy as np
 from     sim_API import *
-from    math_API import *
 from special_API import *
 
 scope = globals()
@@ -19,7 +18,7 @@ save_format      = ".csv"
 save_filename    = "Recording"
 enable_console   = True
 plot_type        = "Graph"
-supp_hash        = "fceb32a7a49ab54130b70bffbf89880c99dcaa31d8ee1334e090fbfa3d0ee383"
+supp_hash        = "35641b82e2ee4330cb4edf2ee98e7a826d59c05ec20566ed35f6c15bc575e56b"
 
 set_const(scope)
 #---
