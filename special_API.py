@@ -54,8 +54,6 @@ def rngstr(length):
 def safeexp(x):
      return np.exp(np.clip(x, a_max=700, a_min=-750))
 
-
-
 #physical modeling functions:
 
 def thermrad(a, emiss, t, t_amb):
@@ -104,23 +102,7 @@ def clock(t, type, hi=1, lo=-1, f=1, duty=0.5, phase=0):
     else:
         return 0
 
-def square(x):
-    return np.sign( np.sin( np.pi * x ) )
-
-def fractal_1(x, depth=15):
-    c = 0
-    for n in range( 0, depth + 1 ):
-        c = c + square(x * 3 ** n) / 3 ** n
-    return c
-
-def c_random(x=33756):
-    t = ( time.perf_counter_ns() + 3445672145142512 ) % 2 ** 64
-    strg = f"hkND;EsT{x}owo{t ^ ( t >> 12 ) ^ ( ( t >> 13 ) % 2 ** 67 )}uwu{t}"
-    return int(SHA256(strg),16) ^ int(SHA256(f"nyaa{(t >> 4) << 1 + 676767}txt"),16)
-
 #Notes:
 """
     none.
 """
-
-
