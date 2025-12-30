@@ -252,12 +252,12 @@ def fplot( wx, f, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy
 
 #UI functions:
 
-def console(scope):
+def console(scope, command_symbol="/"):
     while True:
         cinp = input(">>> ").casefold().strip()
         lb()
-        if cinp.startswith("/"):
-            cinp = cinp.replace("/", "")
+        if cinp.startswith(command_symbol):
+            cinp = cinp.replace(command_symbol, "")
             if   cinp == "exit":
                 print("Exited console.")
                 lb()
@@ -297,9 +297,11 @@ def console(scope):
                 scope[var] = f"{val}"
                 print(f"Set {var} to {val}.")
                 lb()
+            elif cinp == "info":
+                info(scope)
             elif cinp == "help":
                 print("\nHelp menu:")
-                print("Available commands: set, string set, ins, exit")
+                print(f"Available commands: {command_symbol}exit, {command_symbol}setfloat, {command_symbol}setint, {command_symbol}inspect, {command_symbol}stringset, {command_symbol}info, {command_symbol}help, {command_symbol}kill")
             elif cinp == "kill":
                 print("\n exiting program.")
                 time.sleep(1)
@@ -310,7 +312,6 @@ def console(scope):
         else:
             print(cinp)
             lb()
-            
 
 def info(scope):
     imp_s = ["implicit Euler", "Gauss Legendre Runge Kutta 2", "Gauss Legendre Runge Kutta 4", "Gauss Legendre Runge Kutta 6"]
@@ -344,7 +345,7 @@ def UI(scope, enable_console=False, confirm_num_len=8):
         elif ( inp == "console" or inp == "con" ) and enable_console:
             if input(f"\nWarning: usage of this function may break the softwear!\nTo confirm entering the console please enter the following key: \n{rng_var} \n") == rng_var:
                 print("\nConsole:\n") # The console is so restrictive, that its safe
-                console(scope)
+                console(scope, "!")
             else: print("\nIncorrect numer!\n")
         elif inp !=  "": print("Wrong input, please try again.")
 
@@ -355,5 +356,7 @@ def UI(scope, enable_console=False, confirm_num_len=8):
     │
     ├──sim.py
     ├──sim_API.py
+    ├──math_API.py
+    ├──special_API.py
     └──config.ini
 """
