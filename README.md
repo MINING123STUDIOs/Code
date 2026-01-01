@@ -1,4 +1,4 @@
-For a quick example, see below. For detailed derivations, numerical method descriptions, and full API reference, see docs.pdf (coming soon).
+For high level documentation, see below. For detailed derivations, numerical method descriptions, and full API reference, see docs.pdf (coming soon).
 
 # Non-Linear ODE Solver API
 
@@ -20,3 +20,26 @@ and higher-order ODEs via reduction of order. Supports multiple solvers includin
 
 ---
 
+## 2. Quick Installation
+
+1. Copy the following files into your project folder:
+
+```
+
+sim_API.py
+math_API.py
+special_API.py
+config.ini
+
+````
+
+2. Import the functions you need. Example:
+
+```
+from math_API import integrate, deriv
+from sim_API import run_sim
+````
+
+That’s it — you’re ready to use the API.
+
+---
