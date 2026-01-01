@@ -1,6 +1,6 @@
 (proper documentation will be added soon.)
 
-This is a API that's intended to be used for solving non-linear first order differential equations of the form \dot{\textbf{x}}=\textbf{f}_d(t, \textbf{x}). 
+This is a API that's intended to be used for solving non-linear first order ordinary differential equations of the form \dot{\textbf{x}}=\textbf{f}_d(t, \textbf{x}) and thus higher order ODEs through reduction of order. 
 
 It supports various solver types such as explicit and implicit euler as well as Runge kutta and Gauss Lagrange Runge Kutta order 2, 4 and 6.
 
