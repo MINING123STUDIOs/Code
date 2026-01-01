@@ -11,3 +11,6 @@ I would personally advise against using this to write anything at the moment, be
 
 
 sim.py is a demonstration, tests.py runs tests on the APIs (partially). config.ini is unused at the moment.
+
+
+To use the APIs you can copy the 4 files (sim_API.py, math_API.py, special_API.py and config.ini) into your project folder and import the necessary functions. 
