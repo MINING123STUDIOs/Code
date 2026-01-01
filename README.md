@@ -8,3 +8,6 @@ No AI was used in the creation of this file.
 It's still a work in progress project. At the moment it is still rather incomplete, but I will be improving it over time. 
 
 I would personally advise against using this to write anything at the moment, because currently everything in the api is potentially subject to change. 
+
+
+sim.py is a demonstration, tests.py runs tests on the APIs (partially). config.ini is unused at the moment.
