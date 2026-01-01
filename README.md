@@ -4,9 +4,7 @@ For a quick example, see below. For detailed derivations, numerical method descr
 
 Solve non-linear first-order vector ODEs of the form:
 
-\[
-\dot{\mathbf{x}} = \mathbf{f}_d(t, \mathbf{x})
-\]
+dy/dx = f(x, y) 
 
 and higher-order ODEs via reduction of order. Supports multiple solvers including **explicit/implicit Euler**, **Runge–Kutta**, and **Gauss–Legendre Runge–Kutta** (orders 2, 4, and 6).
 
