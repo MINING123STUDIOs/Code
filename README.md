@@ -1,16 +1,24 @@
-(proper documentation will be added soon.)
+For a quick example, see below. For detailed derivations, numerical method descriptions, and full API reference, see docs.pdf (coming soon).
 
-This is an API which is intended to be used for solving non-linear first-order ordinary differential vector equations of the form \dot{\textbf{x}}=\textbf{f}_d(t, \textbf{x}) and thus higher order ODEs through reduction of order. 
+# Non-Linear ODE Solver API
 
-It supports various solver types such as explicit and implicit euler as well as Runge kutta and Gauss Lagrange Runge Kutta order 2, 4 and 6.
+Solve non-linear first-order vector ODEs of the form:
 
-No AI was used in the creation of this file.
-It's still a work in progress project. At the moment it is still rather incomplete, but I will be improving it over time. 
+\[
+\dot{\mathbf{x}} = \mathbf{f}_d(t, \mathbf{x})
+\]
 
-I would personally advise against using this to write anything at the moment, because currently everything in the api is potentially subject to change. 
+and higher-order ODEs via reduction of order. Supports multiple solvers including **explicit/implicit Euler**, **Runge–Kutta**, and **Gauss–Legendre Runge–Kutta** (orders 2, 4, and 6).
 
+**Status:** Work in progress — functions and API may change.
 
-sim.py is a demonstration, tests.py runs tests on the APIs (partially). config.ini is unused at the moment.
+---
 
+## 1. Why use this API?
 
-To use the APIs you can copy the 4 files (sim_API.py, math_API.py, special_API.py and config.ini) into your project folder and import the necessary functions. 
+- Solve systems of ODEs easily without writing solver code from scratch  
+- Supports multiple solver types with a consistent interface  
+- Designed for clarity, simplicity, and reproducibility
+
+---
+
