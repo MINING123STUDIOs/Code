@@ -38,8 +38,8 @@ config.ini
 2. Import the functions you need. Example:
 
 ```
-from math_API import integrate, deriv
-from sim_API import run_sim
+import math_API as m
+import sim_API as sim
 ````
 
 That’s it — you’re ready to use the API.
