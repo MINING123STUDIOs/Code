@@ -6,6 +6,8 @@ Solve non-linear first-order vector ODEs of the form:
 
 dy/dx = f(x, y) 
 
+Almost all of physics can be calculated in this form so with this API it becomes incredibly easy to simulate even the most complex of things! 
+
 and higher-order ODEs via reduction of order. Supports multiple solvers including **explicit/implicit Euler**, **Runge–Kutta**, and **Gauss–Legendre Runge–Kutta** (orders 2, 4, and 6).
 
 **Status:** Work in progress — functions and API may change.
