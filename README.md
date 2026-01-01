@@ -43,3 +43,29 @@ from sim_API import run_sim
 That’s it — you’re ready to use the API.
 
 ---
+
+
+## 3. Working Example
+A working example is provided in `sim.py`.
+
+---
+
+## 4. Running Tests
+
+A partial test suite is included:
+
+```
+tests.py
+```
+
+This verifies that core functions behave correctly.
+
+---
+
+## 5. Further Reading
+
+For detailed function documentation, equations, examples, and derivations, see `docs.pdf`. (coming soon.) 
+
+---
+
+**Enjoy solving ODEs without headaches!**
