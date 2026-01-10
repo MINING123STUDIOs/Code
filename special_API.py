@@ -15,18 +15,9 @@ import random as rng
 import hashlib
 import string
 import time
-from cryptography.fernet import Fernet
 from math_API import *
 
 #crypto functions:
-
-def c_encrypt(key, massage):
-    f = Fernet(key)
-    return f.encrypt(massage.encode("utf-8"))
-    
-def c_decrypt(key, digest):
-    f = Fernet(key)
-    return f.decrypt(digest).decode("utf-8")
 
 def MD5(strg):
     return hashlib.md5(strg.encode("utf8")).hexdigest()

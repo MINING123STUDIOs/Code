@@ -162,8 +162,9 @@ def set_const(scope, sim_name="sim.py", config_name="config.ini"):
 
 def run_sim(delta_time, state, d_state, time_frame, burntime, f, df, ode_solver, eq_solver="fS", show_bar = True, enable_ui = True):
     
-    if enable_ui:
-        print("0/1 Complete.")
+    if enable_ui: print("0/1 Complete.")
+    
+    trw = show_bar and enable_ui
     
     ode_solver = norm_solver_name(ode_solver)
     
@@ -172,30 +173,48 @@ def run_sim(delta_time, state, d_state, time_frame, burntime, f, df, ode_solver,
     
     time = 0
     
-    rec = np.zeros( (len(state) + len(d_state) + 1, steps), dtype = np.float64)
-    
-    t_arr = np.array([0])
+    rec = np.zeros( (len(state) + len(d_state) + 1, steps) )
     
     progress_bar_update_time = max( 1, int( ( steps + burnsteps ) / 100 ) )
     
     for x1 in range( steps + burnsteps ):
-        time += delta_time #keeping time
-        #--- stuff VVV
+        time = ( x1 + 1 ) * delta_time #keeping time
         state = f(time, d_state, state)
         d_state = step(df, time, d_state, state, ode_solver, delta_time, eq_solver)
         
         if x1 >= burnsteps: #recording data
-            t_arr[0] = time
-            sim_state = np.concatenate( (state, d_state, t_arr) )
+            sim_state = np.concatenate( (state, d_state, [time]) )
             rec[:, x1 - burnsteps] = sim_state
-        if x1 % progress_bar_update_time == 0 and show_bar and enable_ui:
-            progress(100 * ( x1 + 1 ) / ( steps + burnsteps))
+        if x1 % progress_bar_update_time == 0 and trw: progress(100 * ( x1 + 1 ) / ( steps + burnsteps))
     
-    if enable_ui:
-        lb()
-        print("1/1 Complete.")
-        print("Please wait. . .")
+    if enable_ui: print("\n1/1 Complete.\nPlease wait. . .")
     return rec
+
+#"""
+def adt_run_sim(delta_time, state, d_state, time_frame, burntime, f, df, ode_solver, tol, min_dt, max_dt, eq_solver="fS"):
+        
+    ode_solver = norm_solver_name(ode_solver)
+    
+    idx = 0
+    time = 0.0
+    
+    rec0 = rec = np.zeros( (len(state) + len(d_state) + 1, 200) )
+        
+    while time <= ( time_frame + burntime ):
+        #delta_time = clamp( delta_time, max_dt, min_dt )
+        state   = f(time, d_state, state)
+        d_state = step(df, time, d_state, state, ode_solver, delta_time, eq_solver)
+        
+        if time >= burntime: #recording data
+            rec[:, idx] = np.concatenate( (state, d_state, [time]) )
+            idx  += 1
+            if idx >= np.array(np.shape(rec))[1]:
+                rec = np.append(rec, rec0, 1)
+        
+        time += delta_time #keeping time
+
+    return rec[:, idx:]
+#"""
 
 def plot(plot_type, d, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False, show_plot=True, ui=True, save_plot=False, save_plot_name="test.png" ):
     if plot_type in ["Graph", "G", "g"]:
@@ -226,7 +245,7 @@ def plot(plot_type, d, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram",
     
     if ui: input("The end of the programm was reached. Press enter to exit.")
 
-def fplot( wx, f, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False, show_plot=True, ui=True, save_plot=False, save_plot_name="test.png" ):
+def fplot(wx, f, datalab, xlab="Time in s", ylab="Y-axis", dlab="Diagram", logy=False, show_plot=True, ui=True, save_plot=False, save_plot_name="test.png" ):
     
     fig, ax = plt.subplots(layout='constrained')
     x = np.linspace(wx[0], wx[1], wx[2])

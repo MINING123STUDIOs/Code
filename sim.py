@@ -11,14 +11,14 @@ scope = globals()
 timeframe        = 5 
 burntime         = 0 
 delta_time       = 2e-3 
-ode_solver       = "GLRK2" 
+ode_solver       = "iE" 
 eq_solver        = "fS" 
 save_data        = False
 save_format      = ".csv" 
 save_filename    = "Recording"
 enable_console   = True
 plot_type        = "Graph"
-supp_hash        = "35641b82e2ee4330cb4edf2ee98e7a826d59c05ec20566ed35f6c15bc575e56b"
+supp_hash        = "fceb32a7a49ab54130b70bffbf89880c99dcaa31d8ee1334e090fbfa3d0ee383"
 
 set_const(scope)
 #---
@@ -33,7 +33,8 @@ def df(t, x, s): return double_pendulum_ode(t, x, s, m1, m2, l1, l2, g)
 
 UI(scope, enable_console)
 
-rec = run_sim(delta_time, state, d_state, timeframe, burntime, no_f, df, ode_solver, eq_solver, False)
+#rec = run_sim(delta_time, state, d_state, timeframe, burntime, no_f, df, ode_solver, eq_solver, False)
+rec = adt_run_sim(delta_time, state, d_state, timeframe, burntime, no_f, df, ode_solver, 1, 0, 500)
 
 # post processing
 theta1, theta2 = rec[1,:], rec[2,:]
