@@ -1,4 +1,4 @@
-For high level documentation, see below. For detailed derivations, numerical method descriptions, and full API reference, see docs.pdf (coming soon).
+For high level documentation, see below. For detailed derivations, numerical method descriptions, and full API reference, see docs.pdf (coming soon). 
 
 # Non-Linear ODE Solver API
 
